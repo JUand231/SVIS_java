@@ -1,0 +1,40 @@
+# Java / Maven
+svis-backend-java/target/
+svis-backend-java/nbactions.xml
+
+# Credenciales del backend
+svis-backend-java/src/main/resources/db.properties
+
+# Credenciales del frontend
+frontend-php/config.php
+
+# Dependencias PHP
+frontend-php/vendor/
+
+# Variables de entorno
+.env
+.env.*
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# NetBeans
+nbactions.xml
+
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak
+*.log
+*.swp
+*~
+
+# NO ignorar los archivos .sql
+# Los scripts SQL sí se comparten entre los integrantes
