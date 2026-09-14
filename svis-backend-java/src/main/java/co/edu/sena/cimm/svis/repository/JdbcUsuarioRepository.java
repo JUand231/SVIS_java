@@ -75,6 +75,23 @@ public class JdbcUsuarioRepository implements UsuarioRepository {
         }
     }
 
+    @Override
+    public java.util.List<Long> listarIdsPorRol(String rol) {
+        String sql = "select id from usuario where rol = ?";
+        java.util.List<Long> ids = new java.util.ArrayList<>();
+        try (Connection c = BaseDeDatos.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, rol);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getLong("id"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error listando usuarios", e);
+        }
+        return ids;
+    }
+
     private Usuario map(ResultSet rs) throws SQLException {
         Long fid = rs.getObject("ficha_id") == null ? null : rs.getLong("ficha_id");
         return new Usuario(
