@@ -17,7 +17,7 @@ public class JdbcEncuestaRepository implements EncuestaRepository {
     @Override
     public List<Encuesta> listarActivas() {
 
-        String consulta = "Select " + Columnas + " from encuesta where estado = ACTIVA";
+        String consulta = "Select " + Columnas + " from encuesta where estado = 'ACTIVA'";
         List<Encuesta> lista = new ArrayList<>();
         try (Connection c = BaseDeDatos.getConnection(); PreparedStatement ps = c.prepareStatement(consulta); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -83,7 +83,7 @@ public class JdbcEncuestaRepository implements EncuestaRepository {
         EstadoEncuesta estado = Enum.valueOf(EstadoEncuesta.class, estadoStr);
 
         return new Encuesta(
-                rs.getLong("Id"),
+                rs.getLong("id"),
                 rs.getString("titulo"),
                 rs.getString("descripcion"),
                 estado

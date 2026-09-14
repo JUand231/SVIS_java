@@ -7,7 +7,7 @@ public interface OpcionRepository {
 
     List<Opcion> listarOpcionesPorEncuesta(Long idEncuesta);
 
-    void crearOpcion(Long idEncuesta, String texto);
+    void crearOpcion(Long idEncuesta, Long candidatoId, String texto, String fotoUrl);
 
     int obtenerContadorVotos(Long idOpcion);
 
