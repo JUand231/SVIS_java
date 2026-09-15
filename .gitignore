@@ -5,11 +5,12 @@ svis-backend-java/nbactions.xml
 # Credenciales del backend
 svis-backend-java/src/main/resources/db.properties
 
-# Credenciales del frontend
-frontend-php/config.php
+# Credenciales del frontend (cada integrante tiene su copia local)
+frontend/config.php
+frontend/config.local.php
 
 # Dependencias PHP
-frontend-php/vendor/
+frontend/vendor/
 
 # Variables de entorno
 .env
@@ -22,6 +23,8 @@ frontend-php/vendor/
 
 # NetBeans
 nbactions.xml
+svis-backend-java/nb-configuration.xml
+svis-backend-java/nbactions.xml
 
 # Sistema operativo
 Thumbs.db
