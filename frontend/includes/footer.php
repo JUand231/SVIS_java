@@ -2,10 +2,8 @@
     <div class="footer-grid">
       <div>
         <div class="footer-brand">
-          <div class="footer-brand-badge">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12.5L10 17.5L19 7.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <strong>SENA CIMM</strong>
+            <img src="assets/sena-logo.png" alt="SENA" style="height:30px; width:auto;">
+            <strong>SENA CIMM</strong>
         </div>
         <p class="footer-desc">Centro Industrial de Mantenimiento y Manufactura (CIMM) - Regional Boyacá.</p>
 
