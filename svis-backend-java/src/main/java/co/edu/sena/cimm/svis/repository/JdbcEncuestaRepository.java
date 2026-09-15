@@ -45,7 +45,7 @@ public class JdbcEncuestaRepository implements EncuestaRepository {
     }
 
     @Override
-    public void crearEncuesta(String titulo, String descripcion) {
+    public long crearEncuesta(String titulo, String descripcion) {
         String consulta = "INSERT INTO encuesta(titulo, descripcion, estado) VALUES (?, ?, ?)";
         try (Connection c = BaseDeDatos.getConnection(); PreparedStatement ps = c.prepareStatement(consulta, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -53,6 +53,12 @@ public class JdbcEncuestaRepository implements EncuestaRepository {
             ps.setString(2, descripcion);
             ps.setString(3, "ACTIVA");
             ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+            throw new RuntimeException("No se obtuvo el ID generado de la encuesta");
 
         } catch (SQLException ex) {
             throw new RuntimeException("Error creando la encuesta", ex);

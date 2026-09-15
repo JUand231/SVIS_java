@@ -6,7 +6,7 @@ import co.edu.sena.cimm.svis.model.Encuesta;
 import co.edu.sena.cimm.svis.model.Token_OTP;
 import co.edu.sena.cimm.svis.repository.BaseDeDatos;
 import co.edu.sena.cimm.svis.repository.EncuestaRepository;
-import co.edu.sena.cimm.svis.repository.JdbcTokenOtpRepository;
+import co.edu.sena.cimm.svis.repository.TokenOtpRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.Connection;
@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public class VotoService {
 
-    private final JdbcTokenOtpRepository tokens = (JdbcTokenOtpRepository) AppContext.get().getTokenOtpRepository();
+    private final TokenOtpRepository tokens = AppContext.get().getTokenOtpRepository();
     private final EncuestaRepository encuestas = AppContext.get().getEncuestaRepository();
 
     public VotoResponse emitirVoto(String codigo, Long opcionId, Long encuestaId, Long usuarioId) {

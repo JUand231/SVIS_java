@@ -1,4 +1,4 @@
-package co.edu.cimm.svis.service;
+package co.edu.sena.cimm.svis.service;
 
 import co.edu.sena.cimm.svis.dto.ResultadoOpcion;
 import co.edu.sena.cimm.svis.model.Encuesta;
@@ -18,23 +18,28 @@ public class EncuestaService {
         this.opcionesRepository = opcionesRepository;
     }
 
-    public void crearEncuesta(String titulo, String descripcion, List<String> textosOpciones) {
+    public long crearEncuesta(String titulo, String descripcion, List<String> textosOpciones) {
         if (titulo == null || titulo.trim().isEmpty()) {
             throw new RuntimeException("Titulo requerido");
         }
-        if (textosOpciones == null || textosOpciones.size() < 2) {
+        if (textosOpciones == null) {
             throw new RuntimeException("Minimo 2 opciones");
         }
-        encuestasRepository.crearEncuesta(titulo.trim(), descripcion == null ? "" : descripcion.trim());
-
-        List<Encuesta> todas = encuestasRepository.listarTodas();
-        Long nuevaId = todas.get(todas.size() - 1).getId();
-
+        List<String> limpias = new ArrayList<>();
         for (String t : textosOpciones) {
             if (t != null && !t.trim().isEmpty()) {
-                opcionesRepository.crearOpcion(nuevaId, null, t.trim(), null);
+                limpias.add(t.trim());
             }
         }
+        if (limpias.size() < 2) {
+            throw new RuntimeException("Minimo 2 opciones");
+        }
+        long nuevaId = encuestasRepository.crearEncuesta(titulo.trim(), descripcion == null ? "" : descripcion.trim());
+
+        for (String t : limpias) {
+            opcionesRepository.crearOpcion(nuevaId, null, t, null);
+        }
+        return nuevaId;
     }
 
     public List<Encuesta> listarActivas() {

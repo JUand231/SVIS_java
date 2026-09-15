@@ -9,7 +9,7 @@ public interface EncuestaRepository {
 
     List<Encuesta> listarTodas();
 
-    void crearEncuesta(String titulo, String descripcion);
+    long crearEncuesta(String titulo, String descripcion);
 
     Encuesta obtenerEncuesta(Long id);
 }

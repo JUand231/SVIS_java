@@ -71,6 +71,7 @@ public class JdbcTokenOtpRepository implements TokenOtpRepository {
         return "OK";
     }
 
+    @Override
     public Optional<Token_OTP> buscarPorCodigo(String codigo, Long idUsuario, Long idEncuesta) {
         String sql = "select " + Columnas + " from token_otp where codigo = ? and usuario_id = ? and encuesta_id = ?";
         try (Connection c = BaseDeDatos.getConnection();
@@ -87,6 +88,7 @@ public class JdbcTokenOtpRepository implements TokenOtpRepository {
         return Optional.empty();
     }
 
+    @Override
     public Optional<Token_OTP> buscarPorCodigoForUpdate(Connection c, String codigo, Long idUsuario, Long idEncuesta) throws SQLException {
         String sql = "select " + Columnas + " from token_otp where codigo = ? and usuario_id = ? and encuesta_id = ? FOR UPDATE";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
@@ -100,6 +102,7 @@ public class JdbcTokenOtpRepository implements TokenOtpRepository {
         return Optional.empty();
     }
 
+    @Override
     public void marcarUsado(Connection c, String codigo) throws SQLException {
         String sql = "UPDATE token_otp SET estado = 'USADO' WHERE codigo = ?";
         try (PreparedStatement ps = c.prepareStatement(sql)) {

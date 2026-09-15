@@ -1,4 +1,4 @@
-package co.edu.cimm.svis.service;
+package co.edu.sena.cimm.svis.service;
 
 import co.edu.sena.cimm.svis.config.AppContext;
 import co.edu.sena.cimm.svis.model.Usuario;
@@ -6,7 +6,15 @@ import co.edu.sena.cimm.svis.repository.UsuarioRepository;
 
 public class AuthService {
 
-    private final UsuarioRepository usuarios = AppContext.get().getUsuarioRepository();
+    private final UsuarioRepository usuarios;
+
+    public AuthService() {
+        this(AppContext.get().getUsuarioRepository());
+    }
+
+    public AuthService(UsuarioRepository usuarios) {
+        this.usuarios = usuarios;
+    }
 
     public Usuario loginAdmin(String username, String contrasenia) {
         if (username == null || username.trim().isEmpty()) {
