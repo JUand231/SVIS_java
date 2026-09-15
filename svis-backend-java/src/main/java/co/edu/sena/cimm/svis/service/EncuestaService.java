@@ -57,6 +57,13 @@ public class EncuestaService {
         return encuestasRepository.obtenerEncuesta(id);
     }
 
+    public void cerrar(Long id) {
+        if (id == null) {
+            throw new RuntimeException("Id requerido");
+        }
+        encuestasRepository.cerrarEncuesta(id);
+    }
+
     public List<ResultadoOpcion> resultados(Long encuestaId) {
         if (encuestaId == null) {
             throw new RuntimeException("Encuesta requerida");
