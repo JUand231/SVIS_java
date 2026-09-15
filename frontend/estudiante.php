@@ -122,13 +122,19 @@ require __DIR__ . '/includes/header.php';
             $opId = (int) ($c['opcionId'] ?? 0);
             $nombre = (string) ($c['texto'] ?? ('Opción ' . ($i + 1)));
             if ($opId <= 0) { continue; }
+            $jor = $c['jornada'] ?? null;
+            $badgeClass = jornadaBadgeClass($jor);
           ?>
             <div class="card candidate-card">
               <div class="candidate-top">
                 <span class="candidate-chip">N° <?= $i + 1 ?></span>
-                <span class="badge badge-activa">Candidato</span>
+                <?php if ($badgeClass !== null): ?>
+                  <span class="badge <?= h($badgeClass) ?>">Jornada <?= h(jornadaTexto($jor)) ?></span>
+                <?php else: ?>
+                  <span class="badge badge-activa">Candidato</span>
+                <?php endif; ?>
               </div>
-              <div class="candidate-photo-wrap jornada-manana">
+              <div class="candidate-photo-wrap <?= h($badgeClass ?? 'jornada-manana') ?>">
                 <div class="candidate-photo"><?= h(strtoupper(substr($nombre, 0, 1))) ?></div>
               </div>
               <h3 class="candidate-name"><?= h($nombre) ?></h3>

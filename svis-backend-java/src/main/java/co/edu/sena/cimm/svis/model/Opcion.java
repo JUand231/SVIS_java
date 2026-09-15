@@ -8,17 +8,19 @@ public class Opcion {
     private int votos_total;
     private Long candidato_id;
     private String foto_url;
+    private String jornada;
 
     public Opcion() {
     }
 
-    public Opcion(Long Id, Long id_encuesta, String texto, int votos_total, Long candidato_id, String foto_url) {
+    public Opcion(Long Id, Long id_encuesta, String texto, int votos_total, Long candidato_id, String foto_url, String jornada) {
         this.Id = Id;
         this.id_encuesta = id_encuesta;
         this.texto = texto;
         this.votos_total = votos_total;
         this.candidato_id = candidato_id;
         this.foto_url = foto_url;
+        this.jornada = jornada;
     }
 
     public Long getId() {
@@ -67,5 +69,13 @@ public class Opcion {
 
     public void setFoto_url(String foto_url) {
         this.foto_url = foto_url;
+    }
+
+    public String getJornada() {
+        return jornada;
+    }
+
+    public void setJornada(String jornada) {
+        this.jornada = jornada;
     }
 }

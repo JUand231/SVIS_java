@@ -26,9 +26,14 @@ public class EncuestaService {
             throw new RuntimeException("Minimo 2 opciones");
         }
         List<String> limpias = new ArrayList<>();
+        List<String> jornadas = new ArrayList<>();
         for (String t : textosOpciones) {
             if (t != null && !t.trim().isEmpty()) {
-                limpias.add(t.trim());
+                // Formato por línea: "Texto | Jornada" (la jornada es opcional).
+                String[] partes = t.trim().split("\\|", 2);
+                limpias.add(partes[0].trim());
+                String j = partes.length > 1 ? partes[1].trim() : "";
+                jornadas.add(j.isEmpty() ? null : j);
             }
         }
         if (limpias.size() < 2) {
@@ -36,8 +41,8 @@ public class EncuestaService {
         }
         long nuevaId = encuestasRepository.crearEncuesta(titulo.trim(), descripcion == null ? "" : descripcion.trim());
 
-        for (String t : limpias) {
-            opcionesRepository.crearOpcion(nuevaId, null, t, null);
+        for (int i = 0; i < limpias.size(); i++) {
+            opcionesRepository.crearOpcion(nuevaId, null, limpias.get(i), null, jornadas.get(i));
         }
         return nuevaId;
     }
@@ -79,6 +84,7 @@ public class EncuestaService {
             r.opcionId = o.getId();
             r.texto = o.getTexto();
             r.fotoUrl = o.getFoto_url();
+            r.jornada = o.getJornada();
             r.votos = o.getVotos_total();
             r.porcentaje = total == 0 ? 0 : (o.getVotos_total() * 100.0 / total);
             res.add(r);

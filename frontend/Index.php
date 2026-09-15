@@ -69,18 +69,41 @@ require __DIR__ . '/includes/header.php';
         <div class="card mt-24">
           <p class="muted" style="font-size:14px;">Aún no hay candidatos publicados. Vuelve pronto.</p>
         </div>
-      <?php else: ?>
+      <?php else:
+        // Tabs por jornada con datos reales (solo las jornadas presentes).
+        $claves = [];
+        foreach ($candidatos as $c) {
+            $k = jornadaClave($c['jornada'] ?? null);
+            if (!isset($claves[$k])) {
+                $claves[$k] = jornadaTexto($c['jornada'] ?? null);
+            }
+        }
+      ?>
+      <div class="jornada-tabs">
+        <button class="jornada-tab active" data-filter="todas">Todas las jornadas</button>
+        <?php foreach ($claves as $k => $et): ?>
+          <button class="jornada-tab" data-filter="<?= h($k) ?>">Jornada <?= h($et) ?></button>
+        <?php endforeach; ?>
+      </div>
+
       <div class="candidate-grid">
         <?php foreach ($candidatos as $i => $c):
           $nombre = (string) ($c['texto'] ?? ('Opción ' . ($i + 1)));
+          $jor = $c['jornada'] ?? null;
+          $clave = jornadaClave($jor);
+          $badgeClass = jornadaBadgeClass($jor);
         ?>
-          <div class="card candidate-card">
+          <div class="card candidate-card" data-jornada="<?= h($clave) ?>">
             <div class="candidate-top">
               <span class="candidate-chip">N° <?= $i + 1 ?></span>
-              <span class="badge badge-activa">Candidato</span>
+              <?php if ($badgeClass !== null): ?>
+                <span class="badge <?= h($badgeClass) ?>">Jornada <?= h(jornadaTexto($jor)) ?></span>
+              <?php else: ?>
+                <span class="badge badge-activa">Jornada <?= h(jornadaTexto($jor)) ?></span>
+              <?php endif; ?>
             </div>
 
-            <div class="candidate-photo-wrap jornada-manana">
+            <div class="candidate-photo-wrap <?= h($badgeClass ?? 'jornada-manana') ?>">
               <div class="candidate-photo"><?= h(strtoupper(substr($nombre, 0, 1))) ?></div>
             </div>
             <h3 class="candidate-name"><?= h($nombre) ?></h3>
@@ -93,6 +116,19 @@ require __DIR__ . '/includes/header.php';
       </div>
       <?php endif; ?>
     </section>
+
+<script>
+document.querySelectorAll('.jornada-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.jornada-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const filtro = tab.dataset.filter;
+    document.querySelectorAll('.candidate-card').forEach(card => {
+      card.style.display = (filtro === 'todas' || card.dataset.jornada === filtro) ? '' : 'none';
+    });
+  });
+});
+</script>
         <section id="como-votar" style="border-top:1px solid var(--line); padding:56px 0;">
       <div class="container">
         <h2 style="font-size:24px;">¿Cómo votar?</h2>

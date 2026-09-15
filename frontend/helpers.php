@@ -3,13 +3,55 @@
 function h($s) {
     return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }
-function jornadaClass($jornada) {
-    return match (strtolower($jornada)) {
-        'mañana' => 'jornada-manana',
-        'tarde'  => 'jornada-tarde',
-        'noche'  => 'jornada-noche',
-        default  => 'jornada-manana',
+// ---- Jornadas (datos reales del backend) ----
+// Normaliza a 'manana'|'tarde'|'noche'. Devuelve null si no hay jornada válida.
+function normalizarJornada($j) {
+    if ($j === null) {
+        return null;
+    }
+    $t = strtolower(trim((string) $j));
+    $t = str_replace(['á', 'é', 'í', 'ó', 'ú', 'ñ'], ['a', 'e', 'i', 'o', 'u', 'n'], $t);
+    if ($t === 'manana') {
+        return 'manana';
+    }
+    if ($t === 'tarde') {
+        return 'tarde';
+    }
+    if ($t === 'noche') {
+        return 'noche';
+    }
+    return null;
+}
+
+function jornadaEtiqueta($norm) {
+    return match ($norm) {
+        'manana' => 'Mañana',
+        'tarde' => 'Tarde',
+        'noche' => 'Noche',
+        default => 'General',
     };
+}
+
+// Clave para filtrar/agrupar: slug conocido u 'otras' (jornada libre sin color propio).
+function jornadaClave($j) {
+    $norm = normalizarJornada($j);
+    return $norm ?? 'otras';
+}
+
+// Etiqueta a mostrar: la conocida, el texto libre tal cual, o 'General'.
+function jornadaTexto($j) {
+    $norm = normalizarJornada($j);
+    if ($norm !== null) {
+        return jornadaEtiqueta($norm);
+    }
+    $t = trim((string) ($j ?? ''));
+    return $t !== '' ? $t : 'General';
+}
+
+// Clase CSS del badge/foto: jornada-manana|tarde|noche, o badge-activa genérico.
+function jornadaBadgeClass($j) {
+    $norm = normalizarJornada($j);
+    return $norm !== null ? 'jornada-' . $norm : null;
 }
 
 // ---- Puente PHP -> backend Java (cURL + JSON) ----
