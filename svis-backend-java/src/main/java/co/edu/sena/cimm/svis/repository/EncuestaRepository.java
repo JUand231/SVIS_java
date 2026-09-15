@@ -12,4 +12,6 @@ public interface EncuestaRepository {
     long crearEncuesta(String titulo, String descripcion);
 
     Encuesta obtenerEncuesta(Long id);
+
+    void cerrarEncuesta(Long id);
 }

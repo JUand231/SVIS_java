@@ -84,6 +84,20 @@ public class JdbcEncuestaRepository implements EncuestaRepository {
         throw new RuntimeException("No existe una encuesta con el ID: " + id);
     }
 
+    @Override
+    public void cerrarEncuesta(Long id) {
+        String consulta = "UPDATE encuesta SET estado = 'CERRADA' WHERE id = ?";
+        try (Connection c = BaseDeDatos.getConnection(); PreparedStatement ps = c.prepareStatement(consulta)) {
+            ps.setLong(1, id);
+            int n = ps.executeUpdate();
+            if (n == 0) {
+                throw new RuntimeException("No existe una encuesta con el ID: " + id);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error cerrando la encuesta", e);
+        }
+    }
+
     private Encuesta map(ResultSet rs) throws SQLException {
         String estadoStr = rs.getString("estado");
         EstadoEncuesta estado = Enum.valueOf(EstadoEncuesta.class, estadoStr);
