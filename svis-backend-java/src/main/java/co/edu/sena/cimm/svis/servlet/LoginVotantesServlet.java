@@ -13,7 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 @WebServlet("/api/login-votante")
-public class LoginVotanteServlet extends HttpServlet {
+public class LoginVotantesServlet extends HttpServlet {
 
     private AuthService auth;
 
