@@ -11,7 +11,7 @@ import java.util.List;
 
 public class JdbcOpcionRepository implements OpcionRepository {
 
-    private static final String Columnas = "id, encuesta_id, candidato_id, texto, foto_url, votos_total, jornada";
+    private static final String Columnas = "id, encuesta_id, candidato_id, texto, foto_url, votos_total";
 
     @Override
     public List<Opcion> listarOpcionesPorEncuesta(Long idEncuesta) {
@@ -34,8 +34,8 @@ public class JdbcOpcionRepository implements OpcionRepository {
     }
 
     @Override
-    public void crearOpcion(Long idEncuesta, Long candidatoId, String texto, String fotoUrl, String jornada) {
-        String consulta = "insert into opcion(encuesta_id, candidato_id, texto, foto_url, jornada) VALUES (?, ?, ?, ?, ?)";
+    public void crearOpcion(Long idEncuesta, Long candidatoId, String texto, String fotoUrl) {
+        String consulta = "insert into opcion(encuesta_id, candidato_id, texto, foto_url) VALUES (?, ?, ?, ?)";
         try (Connection c = BaseDeDatos.getConnection(); PreparedStatement ps = c.prepareStatement(consulta, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setLong(1, idEncuesta);
@@ -43,7 +43,6 @@ public class JdbcOpcionRepository implements OpcionRepository {
             else ps.setLong(2, candidatoId);
             ps.setString(3, texto);
             ps.setString(4, fotoUrl);
-            ps.setString(5, jornada);
             ps.executeUpdate();
 
         } catch (SQLException ex) {
@@ -90,7 +89,6 @@ public class JdbcOpcionRepository implements OpcionRepository {
                 rs.getString("texto"),
                 rs.getInt("votos_total"),
                 candId,
-                rs.getString("foto_url"),
-                rs.getString("jornada"));
+                rs.getString("foto_url"));
     }
 }

@@ -70,43 +70,52 @@ require __DIR__ . '/includes/header.php';
           <p class="muted" style="font-size:14px;">Aún no hay candidatos publicados. Vuelve pronto.</p>
         </div>
       <?php else:
-        // Tabs por jornada con datos reales (solo las jornadas presentes).
-        $claves = [];
+        // Tabs con las jornadas reales presentes (sin inventar ninguna).
+        $jorKeys = [];
         foreach ($candidatos as $c) {
-            $k = jornadaClave($c['jornada'] ?? null);
-            if (!isset($claves[$k])) {
-                $claves[$k] = jornadaTexto($c['jornada'] ?? null);
+            $jr = trim((string) ($c['jornada'] ?? ''));
+            if ($jr !== '' && !in_array($jr, $jorKeys, true)) {
+                $jorKeys[] = $jr;
             }
         }
       ?>
+      <?php if (count($jorKeys) > 0): ?>
       <div class="jornada-tabs">
         <button class="jornada-tab active" data-filter="todas">Todas las jornadas</button>
-        <?php foreach ($claves as $k => $et): ?>
-          <button class="jornada-tab" data-filter="<?= h($k) ?>">Jornada <?= h($et) ?></button>
+        <?php foreach ($jorKeys as $jk): ?>
+          <button class="jornada-tab" data-filter="<?= h($jk) ?>">Jornada <?= h($jk) ?></button>
         <?php endforeach; ?>
       </div>
+      <?php endif; ?>
 
       <div class="candidate-grid">
         <?php foreach ($candidatos as $i => $c):
           $nombre = (string) ($c['texto'] ?? ('Opción ' . ($i + 1)));
-          $jor = $c['jornada'] ?? null;
-          $clave = jornadaClave($jor);
-          $badgeClass = jornadaBadgeClass($jor);
+          $jor = trim((string) ($c['jornada'] ?? ''));
+          $prog = trim((string) ($c['programa'] ?? ''));
+          $foto = trim((string) ($c['fotoUrl'] ?? ''));
+          $norm = normalizarJornada($jor);
+          $colorClass = $norm !== null ? 'jornada-' . $norm : '';
+          $clave = $jor !== '' ? $jor : 'sin-jornada';
         ?>
           <div class="card candidate-card" data-jornada="<?= h($clave) ?>">
             <div class="candidate-top">
               <span class="candidate-chip">N° <?= $i + 1 ?></span>
-              <?php if ($badgeClass !== null): ?>
-                <span class="badge <?= h($badgeClass) ?>">Jornada <?= h(jornadaTexto($jor)) ?></span>
-              <?php else: ?>
-                <span class="badge badge-activa">Jornada <?= h(jornadaTexto($jor)) ?></span>
+              <?php if ($jor !== ''): ?>
+                <span class="badge <?= h($norm !== null ? 'jornada-' . $norm : 'badge-activa') ?>">Jornada <?= h($jor) ?></span>
               <?php endif; ?>
             </div>
 
-            <div class="candidate-photo-wrap <?= h($badgeClass ?? 'jornada-manana') ?>">
+            <div class="candidate-photo-wrap <?= h($colorClass) ?>">
               <div class="candidate-photo"><?= h(strtoupper(substr($nombre, 0, 1))) ?></div>
+              <?php if ($foto !== ''): ?>
+                <img class="candidate-photo-img" src="<?= h($foto) ?>" alt="<?= h($nombre) ?>" onerror="this.remove()">
+              <?php endif; ?>
             </div>
             <h3 class="candidate-name"><?= h($nombre) ?></h3>
+            <?php if ($prog !== ''): ?>
+              <p class="candidate-program">🎓 <?= h($prog) ?></p>
+            <?php endif; ?>
 
             <div class="candidate-footer">
               <a href="login.php" class="btn btn-solid btn-block" style="font-size:13.5px;"> Iniciar sesión para votar</a>

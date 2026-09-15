@@ -19,7 +19,9 @@ public class ResultadosServlet extends HttpServlet {
     public void init() {
         service = new EncuestaService(
                 AppContext.get().getEncuestaRepository(),
-                AppContext.get().getOpcionRepository());
+                AppContext.get().getOpcionRepository(),
+                AppContext.get().getUsuarioRepository(),
+                AppContext.get().getFichaRepository());
     }
 
     @Override

@@ -122,22 +122,28 @@ require __DIR__ . '/includes/header.php';
             $opId = (int) ($c['opcionId'] ?? 0);
             $nombre = (string) ($c['texto'] ?? ('Opción ' . ($i + 1)));
             if ($opId <= 0) { continue; }
-            $jor = $c['jornada'] ?? null;
-            $badgeClass = jornadaBadgeClass($jor);
+            $jor = trim((string) ($c['jornada'] ?? ''));
+            $prog = trim((string) ($c['programa'] ?? ''));
+            $foto = trim((string) ($c['fotoUrl'] ?? ''));
+            $norm = normalizarJornada($jor);
           ?>
             <div class="card candidate-card">
               <div class="candidate-top">
                 <span class="candidate-chip">N° <?= $i + 1 ?></span>
-                <?php if ($badgeClass !== null): ?>
-                  <span class="badge <?= h($badgeClass) ?>">Jornada <?= h(jornadaTexto($jor)) ?></span>
-                <?php else: ?>
-                  <span class="badge badge-activa">Candidato</span>
+                <?php if ($jor !== ''): ?>
+                  <span class="badge <?= h($norm !== null ? 'jornada-' . $norm : 'badge-activa') ?>">Jornada <?= h($jor) ?></span>
                 <?php endif; ?>
               </div>
-              <div class="candidate-photo-wrap <?= h($badgeClass ?? 'jornada-manana') ?>">
+              <div class="candidate-photo-wrap <?= h($norm !== null ? 'jornada-' . $norm : '') ?>">
                 <div class="candidate-photo"><?= h(strtoupper(substr($nombre, 0, 1))) ?></div>
+                <?php if ($foto !== ''): ?>
+                  <img class="candidate-photo-img" src="<?= h($foto) ?>" alt="<?= h($nombre) ?>" onerror="this.remove()">
+                <?php endif; ?>
               </div>
               <h3 class="candidate-name"><?= h($nombre) ?></h3>
+              <?php if ($prog !== ''): ?>
+                <p class="candidate-program">🎓 <?= h($prog) ?></p>
+              <?php endif; ?>
               <div class="candidate-footer">
                 <button class="btn btn-stamp btn-block" onclick="abrirModal(<?= $opId ?>)">Votar por <?= h($nombre) ?></button>
               </div>

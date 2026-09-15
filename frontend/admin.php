@@ -224,9 +224,9 @@ require __DIR__ . '/includes/header.php';
           <textarea name="descripcion" rows="3" placeholder="Describe el propósito de la votación"></textarea>
         </div>
         <div class="field">
-          <label>Opciones (una por línea, formato Nombre | Jornada)</label>
-          <textarea name="opciones" rows="3" placeholder="Laura M. | Mañana&#10;Julián R. | Mañana" required></textarea>
-          <p class="muted mt-8" style="font-size:12.5px;">La jornada es opcional. Ej.: “Camila T. | Tarde”.</p>
+          <label>Opciones (una por línea, formato Nombre | documento | foto)</label>
+          <textarea name="opciones" rows="3" placeholder="Laura M. | 1058274558 | https://.../foto.jpg&#10;Julián R." required></textarea>
+          <p class="muted mt-8" style="font-size:12.5px;">El documento enlaza al candidato con su ficha real (jornada y programa). La foto es opcional.</p>
         </div>
         <div style="display:flex; gap:10px;">
           <button type="button" class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('modal-crear').style.display='none'">Cancelar</button>

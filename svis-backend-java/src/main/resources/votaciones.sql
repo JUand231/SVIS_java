@@ -66,8 +66,7 @@ CREATE TABLE `opcion` (
   `candidato_id` bigint(20) DEFAULT NULL,
   `texto` varchar(150) NOT NULL,
   `foto_url` varchar(255) DEFAULT NULL,
-  `votos_total` int(11) NOT NULL DEFAULT 0,
-  `jornada` varchar(50) DEFAULT NULL
+  `votos_total` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

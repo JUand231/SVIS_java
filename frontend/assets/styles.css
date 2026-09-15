@@ -174,6 +174,18 @@ a { color: inherit; text-decoration: none; }
 .candidate-photo-wrap.jornada-manana .candidate-photo { border-color: var(--yellow); }
 .candidate-photo-wrap.jornada-tarde .candidate-photo { border-color: var(--red); }
 .candidate-photo-wrap.jornada-noche .candidate-photo { border-color: var(--blue); }
+/* Foto real del candidato (foto_url de la BD); si no hay, se muestra la inicial. */
+.candidate-photo-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--line);
+  background: var(--cream);
+}
+.candidate-photo-wrap.jornada-manana .candidate-photo-img { border-color: var(--yellow); }
+.candidate-photo-wrap.jornada-tarde .candidate-photo-img { border-color: var(--red); }
+.candidate-photo-wrap.jornada-noche .candidate-photo-img { border-color: var(--blue); }
 
 .candidate-name { font-size: 16.5px; text-align: center; }
 .candidate-program { font-size: 12px; color: var(--blue); font-weight: 600; text-align: center; margin-top: 3px; }

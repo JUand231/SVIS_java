@@ -23,7 +23,9 @@ public class EncuestaServlet extends HttpServlet {
     public void init() {
         service = new EncuestaService(
                 AppContext.get().getEncuestaRepository(),
-                AppContext.get().getOpcionRepository());
+                AppContext.get().getOpcionRepository(),
+                AppContext.get().getUsuarioRepository(),
+                AppContext.get().getFichaRepository());
     }
 
     // GET /api/encuestas -> activas | ?estado=todas -> todas | ?id=1 -> una

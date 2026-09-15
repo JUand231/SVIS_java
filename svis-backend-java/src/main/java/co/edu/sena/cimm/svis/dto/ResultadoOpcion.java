@@ -5,6 +5,7 @@ public class ResultadoOpcion {
     public String texto;
     public String fotoUrl;
     public String jornada;
+    public String programa;
     public int votos;
     public double porcentaje;
 }

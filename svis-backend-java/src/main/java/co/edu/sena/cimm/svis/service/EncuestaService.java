@@ -2,9 +2,13 @@ package co.edu.sena.cimm.svis.service;
 
 import co.edu.sena.cimm.svis.dto.ResultadoOpcion;
 import co.edu.sena.cimm.svis.model.Encuesta;
+import co.edu.sena.cimm.svis.model.Ficha;
 import co.edu.sena.cimm.svis.model.Opcion;
+import co.edu.sena.cimm.svis.model.Usuario;
 import co.edu.sena.cimm.svis.repository.EncuestaRepository;
+import co.edu.sena.cimm.svis.repository.FichaRepository;
 import co.edu.sena.cimm.svis.repository.OpcionRepository;
+import co.edu.sena.cimm.svis.repository.UsuarioRepository;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,10 +16,15 @@ public class EncuestaService {
 
     private final EncuestaRepository encuestasRepository;
     private final OpcionRepository opcionesRepository;
+    private final UsuarioRepository usuariosRepository;
+    private final FichaRepository fichasRepository;
 
-    public EncuestaService(EncuestaRepository encuestasRepository, OpcionRepository opcionesRepository) {
+    public EncuestaService(EncuestaRepository encuestasRepository, OpcionRepository opcionesRepository,
+            UsuarioRepository usuariosRepository, FichaRepository fichasRepository) {
         this.encuestasRepository = encuestasRepository;
         this.opcionesRepository = opcionesRepository;
+        this.usuariosRepository = usuariosRepository;
+        this.fichasRepository = fichasRepository;
     }
 
     public long crearEncuesta(String titulo, String descripcion, List<String> textosOpciones) {
@@ -25,24 +34,41 @@ public class EncuestaService {
         if (textosOpciones == null) {
             throw new RuntimeException("Minimo 2 opciones");
         }
-        List<String> limpias = new ArrayList<>();
-        List<String> jornadas = new ArrayList<>();
+        // Formato por línea: "Nombre | documentoCandidato | fotoUrl"
+        // (documento y foto opcionales; el documento enlaza la ficha real).
+        List<String> textos = new ArrayList<>();
+        List<Long> candidatoIds = new ArrayList<>();
+        List<String> fotos = new ArrayList<>();
         for (String t : textosOpciones) {
-            if (t != null && !t.trim().isEmpty()) {
-                // Formato por línea: "Texto | Jornada" (la jornada es opcional).
-                String[] partes = t.trim().split("\\|", 2);
-                limpias.add(partes[0].trim());
-                String j = partes.length > 1 ? partes[1].trim() : "";
-                jornadas.add(j.isEmpty() ? null : j);
+            if (t == null || t.trim().isEmpty()) {
+                continue;
             }
+            String[] partes = t.trim().split("\\|", 3);
+            String texto = partes[0].trim();
+            if (texto.isEmpty()) {
+                continue;
+            }
+            String doc = partes.length > 1 ? partes[1].trim() : "";
+            String foto = partes.length > 2 ? partes[2].trim() : "";
+            Long candId = null;
+            if (!doc.isEmpty()) {
+                Usuario u = usuariosRepository.obtenerPorDocumento(doc);
+                if (u == null) {
+                    throw new RuntimeException("No existe usuario con documento: " + doc);
+                }
+                candId = u.getId();
+            }
+            textos.add(texto);
+            candidatoIds.add(candId);
+            fotos.add(foto.isEmpty() ? null : foto);
         }
-        if (limpias.size() < 2) {
+        if (textos.size() < 2) {
             throw new RuntimeException("Minimo 2 opciones");
         }
         long nuevaId = encuestasRepository.crearEncuesta(titulo.trim(), descripcion == null ? "" : descripcion.trim());
 
-        for (int i = 0; i < limpias.size(); i++) {
-            opcionesRepository.crearOpcion(nuevaId, null, limpias.get(i), null, jornadas.get(i));
+        for (int i = 0; i < textos.size(); i++) {
+            opcionesRepository.crearOpcion(nuevaId, candidatoIds.get(i), textos.get(i), fotos.get(i));
         }
         return nuevaId;
     }
@@ -84,7 +110,21 @@ public class EncuestaService {
             r.opcionId = o.getId();
             r.texto = o.getTexto();
             r.fotoUrl = o.getFoto_url();
-            r.jornada = o.getJornada();
+            // Jornada y programa reales: opcion -> candidato -> ficha.
+            r.jornada = null;
+            r.programa = null;
+            if (o.getCandidato_id() != null) {
+                try {
+                    Usuario u = usuariosRepository.obtenerPorId(o.getCandidato_id());
+                    if (u != null && u.getFicha_id() != null) {
+                        Ficha f = fichasRepository.obtenerPorId(u.getFicha_id());
+                        r.jornada = f.getJornada();
+                        r.programa = f.getPrograma();
+                    }
+                } catch (RuntimeException e) {
+                    // Sin ficha enlazada: se deja null y el front lo omite.
+                }
+            }
             r.votos = o.getVotos_total();
             r.porcentaje = total == 0 ? 0 : (o.getVotos_total() * 100.0 / total);
             res.add(r);
