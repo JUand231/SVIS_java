@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 11-09-2026 a las 21:34:26
+-- Tiempo de generación: 14-09-2026 a las 21:29:35
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -37,13 +37,28 @@ CREATE TABLE `encuesta` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `ficha`
+--
+
+CREATE TABLE `ficha` (
+  `id` bigint(20) NOT NULL,
+  `numero` varchar(20) NOT NULL,
+  `programa` varchar(150) NOT NULL,
+  `jornada` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `opcion`
 --
 
 CREATE TABLE `opcion` (
   `id` bigint(20) NOT NULL,
   `encuesta_id` bigint(20) NOT NULL,
+  `candidato_id` bigint(20) DEFAULT NULL,
   `texto` varchar(150) NOT NULL,
+  `foto_url` varchar(255) DEFAULT NULL,
   `votos_total` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -74,6 +89,7 @@ CREATE TABLE `usuario` (
   `contrasenia` varchar(120) NOT NULL,
   `nombre` varchar(120) NOT NULL,
   `documento` varchar(120) NOT NULL,
+  `ficha_id` bigint(20) DEFAULT NULL,
   `rol` enum('ADMIN','USUARIO') NOT NULL DEFAULT 'USUARIO'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -81,9 +97,9 @@ CREATE TABLE `usuario` (
 -- Volcado de datos para la tabla `usuario`
 --
 
-INSERT INTO `usuario` (`id`, `username`, `contrasenia`, `nombre`, `documento`, `rol`) VALUES
-(1, 'juanda', '123', 'juanAdmin', '123456789', 'ADMIN'),
-(2, 'sofias', '123', 'sofiaAprendiz', '12345678', 'USUARIO');
+INSERT INTO `usuario` (`id`, `username`, `contrasenia`, `nombre`, `documento`, `ficha_id`, `rol`) VALUES
+(1, 'juanda', '123', 'juanAdmin', '123456789', NULL, 'ADMIN'),
+(2, 'sofias', '123', 'sofiaAprendiz', '12345678', NULL, 'USUARIO');
 
 --
 -- Índices para tablas volcadas
@@ -96,11 +112,19 @@ ALTER TABLE `encuesta`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indices de la tabla `ficha`
+--
+ALTER TABLE `ficha`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `numero` (`numero`);
+
+--
 -- Indices de la tabla `opcion`
 --
 ALTER TABLE `opcion`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_opc_enc` (`encuesta_id`);
+  ADD KEY `fk_opc_enc` (`encuesta_id`),
+  ADD KEY `fk_opc_cand` (`candidato_id`);
 
 --
 -- Indices de la tabla `token_otp`
@@ -117,7 +141,8 @@ ALTER TABLE `token_otp`
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `documento` (`documento`);
+  ADD UNIQUE KEY `documento` (`documento`),
+  ADD KEY `fk_usu_ficha` (`ficha_id`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -127,6 +152,12 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `encuesta`
 --
 ALTER TABLE `encuesta`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `ficha`
+--
+ALTER TABLE `ficha`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
 --
@@ -155,6 +186,7 @@ ALTER TABLE `usuario`
 -- Filtros para la tabla `opcion`
 --
 ALTER TABLE `opcion`
+  ADD CONSTRAINT `fk_opc_cand` FOREIGN KEY (`candidato_id`) REFERENCES `usuario` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_opc_enc` FOREIGN KEY (`encuesta_id`) REFERENCES `encuesta` (`id`) ON DELETE CASCADE;
 
 --
@@ -163,6 +195,12 @@ ALTER TABLE `opcion`
 ALTER TABLE `token_otp`
   ADD CONSTRAINT `fk_totp_enc` FOREIGN KEY (`encuesta_id`) REFERENCES `encuesta` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_totp_usu` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `usuario`
+--
+ALTER TABLE `usuario`
+  ADD CONSTRAINT `fk_usu_ficha` FOREIGN KEY (`ficha_id`) REFERENCES `ficha` (`id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

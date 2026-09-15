@@ -1,4 +1,4 @@
-package so.edu.sena.cimm.svis.util;
+package co.edu.sena.cimm.svis.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -14,7 +14,10 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-/** Serializacion/deserializacion JSON centralizada (Gson + soporte LocalDateTime). */
+/**
+ * Serializacion/deserializacion JSON centralizada (Gson + soporte
+ * LocalDateTime).
+ */
 public final class JsonUtil {
 
     private static final Gson GSON = new GsonBuilder()
@@ -48,7 +51,7 @@ public final class JsonUtil {
                 return null;
             }
             String valor = json.getAsString();
-            // Los inputs datetime-local envian "yyyy-MM-ddTHH:mm" (sin segundos)
+
             if (valor.length() == 16) {
                 valor = valor + ":00";
             }

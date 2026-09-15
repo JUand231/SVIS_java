@@ -62,6 +62,14 @@ public class Token_OTP {
         this.estado = token;
     }
 
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
     public LocalDateTime getExpira_en() {
         return expira_en;
     }
