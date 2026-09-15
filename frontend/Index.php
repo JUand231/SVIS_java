@@ -41,7 +41,7 @@ require __DIR__ . '/includes/header.php';
         <p class="muted" style="font-size:12.5px;">Comprobante de ejemplo</p>
         <h3 style="margin-top:8px; font-size:18px;">Voto registrado</h3>
         <div class="divider">recibo anónimo</div>
-        <p style="font-family:'IBM Plex Mono', monospace; font-size:14px; color:var(--ink-soft);">7F3A-91C2-BE04-KX7Q</p>
+        <p style="font-family:'IBM Plex Mono', monospace; font-size:14px; color:var(--ink-soft);">123-456-789</p>
         <p class="muted mt-16" style="font-size:13px;">Este código no identifica al votante — solo confirma que el voto fue procesado.</p>
       </div>
     </div>
