@@ -150,14 +150,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button class="btn btn-solid btn-block" type="submit" style="background:var(--login-brand);">Ingresar</button>
           </form>
 
-          <div class="divider">vista previa de diseño</div>
-          <div style="display:flex; gap:10px;">
-            <a href="admin.php" class="btn btn-ghost" style="flex:1; font-size:13px; padding:10px;">Ver Administrador</a>
-            <a href="estudiante.php" class="btn btn-ghost" style="flex:1; font-size:13px; padding:10px;">Ver
-              Estudiante</a>
-          </div>
-          <a href="login.php?estado=ya_voto" class="muted"
-            style="display:block; text-align:center; font-size:12px; margin-top:14px;">(Demo) Ver mensaje de "ya voté"</a>
         <?php endif; ?>
       </div>
     </div>
