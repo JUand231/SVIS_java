@@ -157,13 +157,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </body>
 
 <script>
-  document.getElementById('tabVotante').onclick = function () {
-    document.getElementById('formVotante').style.display = '';
-    document.getElementById('formAdmin').style.display = 'none';
+  const tabVotante = document.getElementById('tabVotante');
+  const tabAdmin = document.getElementById('tabAdmin');
+  const formVotante = document.getElementById('formVotante');
+  const formAdmin = document.getElementById('formAdmin');
+
+  function activarTab(activo, inactivo, formMostrar, formOcultar) {
+    activo.classList.remove('btn-ghost');
+    activo.classList.add('btn-solid');
+    inactivo.classList.remove('btn-solid');
+    inactivo.classList.add('btn-ghost');
+    formMostrar.style.display = '';
+    formOcultar.style.display = 'none';
+  }
+
+  tabVotante.onclick = function () {
+    activarTab(tabVotante, tabAdmin, formVotante, formAdmin);
   };
-  document.getElementById('tabAdmin').onclick = function () {
-    document.getElementById('formVotante').style.display = 'none';
-    document.getElementById('formAdmin').style.display = '';
+  tabAdmin.onclick = function () {
+    activarTab(tabAdmin, tabVotante, formAdmin, formVotante);
   };
 </script>
 
