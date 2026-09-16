@@ -11,7 +11,7 @@ import java.util.List;
 
 public class JdbcOpcionRepository implements OpcionRepository {
 
-    private static final String Columnas = "id, encuesta_id, candidato_id, texto, foto_url, votos_total";
+    private static final String Columnas = "id, encuesta_id, candidato_id, texto, foto_url, propuestas, votos_total";
 
     @Override
     public List<Opcion> listarOpcionesPorEncuesta(Long idEncuesta) {
@@ -34,8 +34,8 @@ public class JdbcOpcionRepository implements OpcionRepository {
     }
 
     @Override
-    public void crearOpcion(Long idEncuesta, Long candidatoId, String texto, String fotoUrl) {
-        String consulta = "insert into opcion(encuesta_id, candidato_id, texto, foto_url) VALUES (?, ?, ?, ?)";
+    public void crearOpcion(Long idEncuesta, Long candidatoId, String texto, String fotoUrl, String propuestas) {
+        String consulta = "insert into opcion(encuesta_id, candidato_id, texto, foto_url, propuestas) VALUES (?, ?, ?, ?, ?)";
         try (Connection c = BaseDeDatos.getConnection(); PreparedStatement ps = c.prepareStatement(consulta, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setLong(1, idEncuesta);
@@ -43,6 +43,7 @@ public class JdbcOpcionRepository implements OpcionRepository {
             else ps.setLong(2, candidatoId);
             ps.setString(3, texto);
             ps.setString(4, fotoUrl);
+            ps.setString(5, propuestas);
             ps.executeUpdate();
 
         } catch (SQLException ex) {
@@ -83,12 +84,15 @@ public class JdbcOpcionRepository implements OpcionRepository {
 
     private Opcion map(ResultSet rs) throws SQLException {
         Long candId = rs.getObject("candidato_id") == null ? null : rs.getLong("candidato_id");
+        String propuestas = null;
+        try { propuestas = rs.getString("propuestas"); } catch (SQLException e) { propuestas = null; }
         return new Opcion(
                 rs.getLong("id"),
                 rs.getLong("encuesta_id"),
                 rs.getString("texto"),
                 rs.getInt("votos_total"),
                 candId,
-                rs.getString("foto_url"));
+                rs.getString("foto_url"),
+                propuestas);
     }
 }

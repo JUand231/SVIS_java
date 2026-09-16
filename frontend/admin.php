@@ -234,9 +234,9 @@ require __DIR__ . '/includes/header.php';
           <textarea name="descripcion" rows="3" placeholder="Describe el propósito de la votación"><?= h($crearDescripcion) ?></textarea>
         </div>
         <div class="field">
-          <label>Opciones (una por línea, formato Nombre | documento | foto)</label>
-          <textarea name="opciones" rows="3" placeholder="Laura M. | 1058274558 | https://.../foto.jpg&#10;Julián R. | 12345678 | https://.../foto.jpg" required><?= h($crearOpcionesRaw) ?></textarea>
-          <p class="muted mt-8" style="font-size:12.5px;">Nombre y documento obligatorios (deben coincidir con el usuario registrado). La foto es opcional.</p>
+          <label>Opciones (una por línea, formato Nombre | documento | foto | propuesta1 ; propuesta2)</label>
+          <textarea name="opciones" rows="3" placeholder="Laura M. | 1058274558 | https://.../foto.jpg | Más bienestar ; Flexibilidad horaria&#10;Julián R. | 12345678 | https://.../foto.jpg | Comité de quejas ; Canal anónimo" required><?= h($crearOpcionesRaw) ?></textarea>
+          <p class="muted mt-8" style="font-size:12.5px;">Nombre y documento obligatorios (deben coincidir con el usuario registrado). La foto y las propuestas (separadas por ;) son opcionales.</p>
         </div>
         <div style="display:flex; gap:10px;">
           <button type="button" class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('modal-crear').style.display='none'">Cancelar</button>
