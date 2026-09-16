@@ -10,16 +10,25 @@ $navLinks = [
 ];
 $topRight = ['href' => 'login.php', 'text' => 'Iniciar Sesión', 'style' => 'btn-stamp'];
 
-$candidatos = [
-    ['id' => 1, 'numero' => 2, 'nombre' => 'Laura M.', 'jornada' => 'manana', 'programa' => 'Análisis y Desarrollo de Software',
-     'propuestas' => ['Más espacios de bienestar para aprendices', 'Flexibilidad horaria para prácticas']],
-    ['id' => 2, 'numero' => 6, 'nombre' => 'Julián R.', 'jornada' => 'manana', 'programa' => 'Producción de Componentes Mecánicos',
-     'propuestas' => ['Comité permanente de seguimiento a quejas', 'Canal digital anónimo de reportes']],
-    ['id' => 3, 'numero' => 1, 'nombre' => 'Camila T.', 'jornada' => 'tarde', 'programa' => 'Técnico en Atención Integral',
-     'propuestas' => ['Jornadas de salud mental mensuales', 'Acompañamiento psicosocial permanente']],
-    ['id' => 4, 'numero' => 4, 'nombre' => 'Andrés P.', 'jornada' => 'noche', 'programa' => 'Implementación de Infraestructura TIC',
-     'propuestas' => ['Horarios de biblioteca extendidos', 'Rutas de transporte para jornada nocturna']],
-];
+$candidatos = [];
+$encuestaActiva = null;
+$errorIndex = null;
+
+// Candidatos reales: primera encuesta activa + sus opciones.
+// GET /api/encuestas  ->  GET /api/resultados?encuestaId= ({opcionId, texto})
+[$httpIndex, $dataIndex] = apiGet('/api/encuestas');
+if ($httpIndex === 200 && is_array($dataIndex) && count($dataIndex) > 0) {
+    $encuestaActiva = $dataIndex[0];
+    $eidIndex = (int) ($encuestaActiva['Id'] ?? $encuestaActiva['id'] ?? 0);
+    if ($eidIndex > 0) {
+        [$httpRes, $dataRes] = apiGet('/api/resultados?encuestaId=' . $eidIndex);
+        if ($httpRes === 200 && is_array($dataRes)) {
+            $candidatos = $dataRes;
+        }
+    }
+} elseif ($httpIndex === 0) {
+    $errorIndex = 'No se pudo conectar con el backend en este momento.';
+}
 
 require __DIR__ . '/includes/header.php';
 ?>
@@ -41,50 +50,94 @@ require __DIR__ . '/includes/header.php';
         <p class="muted" style="font-size:12.5px;">Comprobante de ejemplo</p>
         <h3 style="margin-top:8px; font-size:18px;">Voto registrado</h3>
         <div class="divider">recibo anónimo</div>
-        <p style="font-family:'IBM Plex Mono', monospace; font-size:14px; color:var(--ink-soft);">7F3A-91C2-BE04-KX7Q</p>
+        <p style="font-family:'IBM Plex Mono', monospace; font-size:14px; color:var(--ink-soft);">123-456-789</p>
         <p class="muted mt-16" style="font-size:13px;">Este código no identifica al votante — solo confirma que el voto fue procesado.</p>
       </div>
     </div>
 
     <section id="candidatos" class="container" style="padding:64px 40px;">
-      <h2 style="font-size:24px;">Candidatos por jornada</h2>
+      <h2 style="font-size:24px;">
+        <?= $encuestaActiva !== null ? 'Candidatos · ' . h($encuestaActiva['titulo'] ?? '') : 'Candidatos' ?>
+      </h2>
       <p class="muted mt-8" style="font-size:14px;">Conoce a los aprendices postulados para representarte.</p>
 
+      <?php if ($errorIndex !== null): ?>
+        <div class="card mt-24" style="border-left:3px solid var(--red);">
+          <p class="muted" style="font-size:13.5px;"><?= h($errorIndex) ?></p>
+        </div>
+      <?php elseif (count($candidatos) === 0): ?>
+        <div class="card mt-24">
+          <p class="muted" style="font-size:14px;">Aún no hay candidatos publicados. Vuelve pronto.</p>
+        </div>
+      <?php else:
+        // Tabs con las jornadas reales presentes (sin inventar ninguna).
+        $jorKeys = [];
+        foreach ($candidatos as $c) {
+            $jr = trim((string) ($c['jornada'] ?? ''));
+            if ($jr !== '' && !in_array($jr, $jorKeys, true)) {
+                $jorKeys[] = $jr;
+            }
+        }
+      ?>
+      <?php if (count($jorKeys) > 0): ?>
       <div class="jornada-tabs">
         <button class="jornada-tab active" data-filter="todas">Todas las jornadas</button>
-        <button class="jornada-tab" data-filter="manana">Jornada Mañana</button>
-        <button class="jornada-tab" data-filter="tarde">Jornada Tarde</button>
-        <button class="jornada-tab" data-filter="noche">Jornada Noche</button>
+        <?php foreach ($jorKeys as $jk): ?>
+          <button class="jornada-tab" data-filter="<?= h($jk) ?>">Jornada <?= h($jk) ?></button>
+        <?php endforeach; ?>
       </div>
+      <?php endif; ?>
 
       <div class="candidate-grid">
-        <?php foreach ($candidatos as $c): ?>
-          <div class="card candidate-card" data-jornada="<?= h($c['jornada']) ?>">
+        <?php foreach ($candidatos as $i => $c):
+          $nombre = (string) ($c['texto'] ?? ('Opción ' . ($i + 1)));
+          $jor = trim((string) ($c['jornada'] ?? ''));
+          $prog = trim((string) ($c['programa'] ?? ''));
+          $foto = trim((string) ($c['fotoUrl'] ?? ''));
+          $norm = normalizarJornada($jor);
+          $colorClass = $norm !== null ? 'jornada-' . $norm : '';
+          $clave = $jor !== '' ? $jor : 'sin-jornada';
+        ?>
+          <div class="card candidate-card" data-jornada="<?= h($clave) ?>">
             <div class="candidate-top">
-              <span class="candidate-chip">N° <?= (int) $c['numero'] ?></span>
-              <span class="badge jornada-<?= h($c['jornada']) ?>">Jornada <?= ucfirst(h($c['jornada'])) ?></span>
+              <span class="candidate-chip">N° <?= $i + 1 ?></span>
+              <?php if ($jor !== ''): ?>
+                <span class="badge <?= h($norm !== null ? 'jornada-' . $norm : 'badge-activa') ?>">Jornada <?= h($jor) ?></span>
+              <?php endif; ?>
             </div>
 
-            <div class="candidate-photo-wrap jornada-<?= h($c['jornada']) ?>">
-              <div class="candidate-photo"><?= h(strtoupper(substr($c['nombre'], 0, 1))) ?></div>
+            <div class="candidate-photo-wrap <?= h($colorClass) ?>">
+              <div class="candidate-photo"><?= h(strtoupper(substr($nombre, 0, 1))) ?></div>
+              <?php if ($foto !== ''): ?>
+                <img class="candidate-photo-img" src="<?= h($foto) ?>" alt="<?= h($nombre) ?>" onerror="this.remove()">
+              <?php endif; ?>
             </div>
-            <h3 class="candidate-name"><?= h($c['nombre']) ?></h3>
-            <p class="candidate-program">🎓 <?= h($c['programa']) ?></p>
-
-            <ul class="candidate-proposals">
-              <?php foreach ($c['propuestas'] as $p): ?>
-                <li><?= h($p) ?></li>
-              <?php endforeach; ?>
-            </ul>
+            <h3 class="candidate-name"><?= h($nombre) ?></h3>
+            <?php if ($prog !== ''): ?>
+              <p class="candidate-program">🎓 <?= h($prog) ?></p>
+            <?php endif; ?>
 
             <div class="candidate-footer">
-              <span class="link-plan">Ver plan de gobierno <span>→</span></span>
-              <a href="login.php" class="btn btn-solid btn-block" style="font-size:13.5px;">🔒 Iniciar sesión para votar</a>
+              <a href="login.php" class="btn btn-solid btn-block" style="font-size:13.5px;"> Iniciar sesión para votar</a>
             </div>
           </div>
         <?php endforeach; ?>
       </div>
+      <?php endif; ?>
     </section>
+
+<script>
+document.querySelectorAll('.jornada-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.jornada-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const filtro = tab.dataset.filter;
+    document.querySelectorAll('.candidate-card').forEach(card => {
+      card.style.display = (filtro === 'todas' || card.dataset.jornada === filtro) ? '' : 'none';
+    });
+  });
+});
+</script>
         <section id="como-votar" style="border-top:1px solid var(--line); padding:56px 0;">
       <div class="container">
         <h2 style="font-size:24px;">¿Cómo votar?</h2>
@@ -111,16 +164,4 @@ require __DIR__ . '/includes/header.php';
     </section>
   </main>
 
-<script>
-document.querySelectorAll('.jornada-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.jornada-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    const filtro = tab.dataset.filter;
-    document.querySelectorAll('.candidate-card').forEach(card => {
-      card.style.display = (filtro === 'todas' || card.dataset.jornada === filtro) ? '' : 'none';
-    });
-  });
-});
-</script>
 <?php require __DIR__ . '/includes/footer.php'; ?>

@@ -43,6 +43,38 @@ public class JdbcUsuarioRepository implements UsuarioRepository {
     }
 
     @Override
+    public Usuario obtenerPorDocumento(String documento) {
+        String sql = "select " + Columnas + " from usuario u where u.documento = ?";
+        try (Connection c = BaseDeDatos.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, documento);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return map(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error consultando usuario por documento", e);
+        }
+        return null;
+    }
+
+    @Override
+    public Usuario obtenerPorId(Long id) {
+        String sql = "select " + Columnas + " from usuario u where u.id = ?";
+        try (Connection c = BaseDeDatos.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return map(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error consultando usuario por id", e);
+        }
+        return null;
+    }
+
+    @Override
     public boolean existeUsername(String username) {
         String sql = "select 1 from usuario where username = ?";
         try (Connection c = BaseDeDatos.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {

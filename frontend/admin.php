@@ -1,31 +1,102 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
+exigirSesion('admin');
 
 $titulo = 'Mis votaciones';
-$topRight = ['href' => 'login.php', 'text' => 'Cerrar sesión', 'style' => 'btn-danger'];
+$topRight = ['href' => 'logout.php', 'text' => 'Cerrar sesión', 'style' => 'btn-danger'];
 
-// Datos de ejemplo — más adelante esto vendrá de la base de datos / API
-$encuestas = [
-    [
-        'id' => 1, 'estado' => 'activa', 'titulo' => 'Representante de Aprendiz 2026',
-        'descripcion' => 'Elección del vocero ante el comité de bienestar del Centro CIMM.',
-        'votos' => 302,
-        'opciones' => [['nombre' => 'Laura M.', 'pct' => 54], ['nombre' => 'Julián R.', 'pct' => 46]],
-    ],
-    [
-        'id' => 2, 'estado' => 'cerrada', 'titulo' => 'Representante de Aprendiz 2025',
-        'descripcion' => 'Resultados definitivos del periodo anterior.',
-        'votos' => 289,
-        'opciones' => [['nombre' => 'Camila T.', 'pct' => 61], ['nombre' => 'Andrés P.', 'pct' => 39]],
-    ],
-    [
-        'id' => 3, 'estado' => 'cerrada', 'titulo' => 'Representante de Aprendiz 2024',
-        'descripcion' => 'Resultados definitivos del periodo anterior.',
-        'votos' => 349,
-        'opciones' => [['nombre' => 'Camila T.', 'pct' => 61], ['nombre' => 'Andrés P.', 'pct' => 39]],
-    ],
-];
+$errorAdmin = null;
+
+// Acciones del panel: crear / cerrar / generar tokens (con PRG).
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $accion = $_POST['accion'] ?? '';
+
+    if ($accion === 'crear') {
+        $tituloN = trim($_POST['titulo'] ?? '');
+        $descripcionN = trim($_POST['descripcion'] ?? '');
+        // El textarea trae una opción por línea -> se parte por \n.
+        $lineas = preg_split('/\r\n|\r|\n/', $_POST['opciones'] ?? '');
+        $opciones = array_values(array_filter(array_map('trim', $lineas), fn($t) => $t !== ''));
+        if ($tituloN === '' || count($opciones) < 2) {
+            $errorAdmin = 'Para crear se requiere título y mínimo 2 opciones.';
+        } else {
+            [$http, $data] = apiPost('/api/encuestas', [
+                'titulo' => $tituloN,
+                'descripcion' => $descripcionN,
+                'opciones' => $opciones,
+            ]);
+            if ($http === 201) {
+                header('Location: admin.php?msg=creada');
+                exit;
+            } elseif ($http === 0) {
+                $errorAdmin = 'No se pudo conectar con el backend Java (¿Tomcat apagado?).';
+            } else {
+                $errorAdmin = (is_array($data) && isset($data['mensaje'])) ? $data['mensaje'] : 'No se pudo crear la encuesta.';
+            }
+        }
+    } elseif ($accion === 'cerrar') {
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $errorAdmin = 'Id de encuesta inválido.';
+        } else {
+            [$http, $data] = apiPut('/api/encuestas?id=' . $id);
+            if ($http === 200) {
+                header('Location: admin.php?msg=cerrada');
+                exit;
+            } elseif ($http === 0) {
+                $errorAdmin = 'No se pudo conectar con el backend Java (¿Tomcat apagado?).';
+            } else {
+                $errorAdmin = (is_array($data) && isset($data['mensaje'])) ? $data['mensaje'] : 'No se pudo cerrar la votación.';
+            }
+        }
+    } elseif ($accion === 'tokens') {
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $errorAdmin = 'Id de encuesta inválido.';
+        } else {
+            [$http, $data] = apiPost('/api/tokens/generar', ['encuestaId' => $id]);
+            if ($http === 200) {
+                $n = is_array($data) ? (int) ($data['creados'] ?? 0) : 0;
+                header('Location: admin.php?msg=tokens&n=' . $n);
+                exit;
+            } elseif ($http === 0) {
+                $errorAdmin = 'No se pudo conectar con el backend Java (¿Tomcat apagado?).';
+            } else {
+                $errorAdmin = (is_array($data) && isset($data['mensaje'])) ? $data['mensaje'] : 'No se pudieron generar los tokens.';
+            }
+        }
+    }
+}
+
+// Listado real: GET /api/encuestas?estado=todas
+$encuestas = [];
+[$httpList, $dataList] = apiGet('/api/encuestas?estado=todas');
+if ($httpList === 200 && is_array($dataList)) {
+    $encuestas = $dataList;
+} elseif ($httpList === 0) {
+    $errorAdmin = $errorAdmin ?? 'No se pudo conectar con el backend Java (¿Tomcat apagado?).';
+} else {
+    $errorAdmin = $errorAdmin ?? 'No se pudieron cargar las encuestas.';
+}
+
+// Resultados por encuesta para pintar votos y barras:
+// GET /api/resultados?encuestaId= -> [{texto, votos, porcentaje}]
+$resultadosPorEncuesta = [];
+foreach ($encuestas as $enc) {
+    $eid = (int) ($enc['Id'] ?? $enc['id'] ?? 0);
+    if ($eid <= 0) {
+        continue;
+    }
+    [$http, $data] = apiGet('/api/resultados?encuestaId=' . $eid);
+    if ($http === 200 && is_array($data)) {
+        $resultadosPorEncuesta[$eid] = $data;
+    } else {
+        $resultadosPorEncuesta[$eid] = [];
+    }
+}
+
+$msg = $_GET['msg'] ?? null;
 
 require __DIR__ . '/includes/header.php';
 ?>
@@ -40,30 +111,77 @@ require __DIR__ . '/includes/header.php';
       </button>
     </div>
 
+    <?php if ($msg === 'creada'): ?>
+      <div class="card mt-16" style="border-left:3px solid var(--green);">
+        <p style="font-size:14px;">Encuesta creada correctamente.</p>
+      </div>
+    <?php elseif ($msg === 'cerrada'): ?>
+      <div class="card mt-16" style="border-left:3px solid var(--green);">
+        <p style="font-size:14px;">Votación cerrada correctamente.</p>
+      </div>
+    <?php elseif ($msg === 'tokens'): ?>
+      <div class="card mt-16" style="border-left:3px solid var(--green);">
+        <p style="font-size:14px;">Tokens generados: <strong><?= (int) ($_GET['n'] ?? 0) ?></strong>.</p>
+      </div>
+    <?php endif; ?>
+
+    <?php if ($errorAdmin !== null): ?>
+      <div class="card mt-16" style="border-left:3px solid var(--red);">
+        <span class="badge badge-cerrada">Atención</span>
+        <p class="muted mt-8" style="font-size:13.5px;"><?= h($errorAdmin) ?></p>
+      </div>
+    <?php endif; ?>
+
+    <?php if (count($encuestas) === 0 && $errorAdmin === null): ?>
+      <div class="card mt-32">
+        <p class="muted" style="font-size:14px;">Aún no hay encuestas. Crea la primera con “+ Nueva encuesta”.</p>
+      </div>
+    <?php endif; ?>
+
     <div class="grid-2 mt-32">
-      <?php foreach ($encuestas as $enc): ?>
-  <div class="card card-ticket" id="encuesta-<?= (int) $enc['id'] ?>" style="<?= $enc['estado'] === 'cerrada' ? 'opacity:.85;' : '' ?>">
+      <?php foreach ($encuestas as $enc):
+        $eid = (int) ($enc['Id'] ?? $enc['id'] ?? 0);
+        $estado = strtoupper((string) ($enc['estado'] ?? ''));
+        $esActiva = $estado === 'ACTIVA';
+        $res = $resultadosPorEncuesta[$eid] ?? [];
+        $totalVotos = 0;
+        foreach ($res as $r) { $totalVotos += (int) ($r['votos'] ?? 0); }
+      ?>
+  <div class="card card-ticket" id="encuesta-<?= $eid ?>" style="<?= $esActiva ? '' : 'opacity:.85;' ?>">
     <div class="flex-between">
-      <span class="badge badge-<?= h($enc['estado']) ?>" id="badge-<?= (int) $enc['id'] ?>">
-        <?= $enc['estado'] === 'activa' ? 'Activa' : 'Cerrada' ?>
+      <span class="badge badge-<?= $esActiva ? 'activa' : 'cerrada' ?>" id="badge-<?= $eid ?>">
+        <?= $esActiva ? 'Activa' : 'Cerrada' ?>
       </span>
-      <span class="muted" style="font-size:12.5px;"><?= (int) $enc['votos'] ?> votos</span>
+      <span class="muted" style="font-size:12.5px;"><?= $totalVotos ?> votos</span>
     </div>
-    <h3 class="mt-16" style="font-size:17px;"><?= h($enc['titulo']) ?></h3>
-    <p class="muted mt-8" style="font-size:13.5px;"><?= h($enc['descripcion']) ?></p>
+    <h3 class="mt-16" style="font-size:17px;"><?= h($enc['titulo'] ?? ('Encuesta #' . $eid)) ?></h3>
+    <p class="muted mt-8" style="font-size:13.5px;"><?= h($enc['descripcion'] ?? '') ?></p>
 
     <div class="mt-24">
-      <?php foreach ($enc['opciones'] as $op): ?>
+      <?php foreach ($res as $op):
+        $pct = round((float) ($op['porcentaje'] ?? 0));
+      ?>
         <div class="result-row">
-          <div class="result-head"><span><?= h($op['nombre']) ?></span><span class="pct"><?= (int) $op['pct'] ?>%</span></div>
-          <div class="result-track"><div class="result-fill" style="width:<?= (int) $op['pct'] ?>%;"></div></div>
+          <div class="result-head"><span><?= h($op['texto'] ?? '') ?></span><span class="pct"><?= $pct ?>%</span></div>
+          <div class="result-track"><div class="result-fill" style="width:<?= $pct ?>%;"></div></div>
         </div>
       <?php endforeach; ?>
     </div>
 
-    <?php if ($enc['estado'] === 'activa'): ?>
-      <button class="btn btn-danger btn-block mt-16" id="btn-cerrar-<?= (int) $enc['id'] ?>"
-        onclick="confirmarCierre(<?= (int) $enc['id'] ?>, '<?= h($enc['titulo']) ?>')">
+    <div class="mt-16" style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="resultados.php?encuestaId=<?= $eid ?>" class="btn btn-ghost" style="flex:1; text-align:center;">Ver resultados</a>
+      <?php if ($esActiva): ?>
+        <form method="post" action="admin.php" style="flex:1; display:flex;">
+          <input type="hidden" name="accion" value="tokens">
+          <input type="hidden" name="id" value="<?= $eid ?>">
+          <button type="submit" class="btn btn-stamp btn-block" title="Genera un token por votante para esta encuesta">Generar tokens</button>
+        </form>
+      <?php endif; ?>
+    </div>
+
+    <?php if ($esActiva): ?>
+      <button class="btn btn-danger btn-block mt-16" id="btn-cerrar-<?= $eid ?>"
+        onclick="confirmarCierre(<?= $eid ?>, '<?= h($enc['titulo'] ?? '') ?>')">
         Cerrar votación
       </button>
     <?php else: ?>
@@ -81,10 +199,14 @@ require __DIR__ . '/includes/header.php';
     <p class="muted mt-8" style="font-size:13.5px;">
       Se cerrará <strong id="modal-cerrar-titulo"></strong>. Los estudiantes ya no podrán emitir más votos en esta encuesta.
     </p>
-    <div style="display:flex; gap:10px; margin-top:22px;">
-      <button type="button" class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('modal-cerrar').style.display='none'">Cancelar</button>
-      <button type="button" class="btn btn-danger" style="flex:1;" onclick="cerrarEncuestaConfirmado()">Sí, cerrar</button>
-    </div>
+    <form id="form-cerrar" method="post" action="admin.php">
+      <input type="hidden" name="accion" value="cerrar">
+      <input type="hidden" name="id" id="cerrar-id" value="">
+      <div style="display:flex; gap:10px; margin-top:22px;">
+        <button type="button" class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('modal-cerrar').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn btn-danger" style="flex:1;">Sí, cerrar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -92,17 +214,19 @@ require __DIR__ . '/includes/header.php';
     <div class="card modal-card-lg">
       <h3 style="font-size:20px;">Nueva encuesta</h3>
       <form class="mt-16" method="post" action="admin.php">
+        <input type="hidden" name="accion" value="crear">
         <div class="field">
           <label>Título</label>
-          <input name="titulo" type="text" placeholder="Ej. Representante de Bienestar 2026">
+          <input name="titulo" type="text" placeholder="Ej. Representante de Bienestar 2026" required>
         </div>
         <div class="field">
           <label>Descripción institucional</label>
           <textarea name="descripcion" rows="3" placeholder="Describe el propósito de la votación"></textarea>
         </div>
         <div class="field">
-          <label>Opciones (una por línea)</label>
-          <textarea name="opciones" rows="3" placeholder="Laura M.&#10;Julián R."></textarea>
+          <label>Opciones (una por línea, formato Nombre | documento | foto)</label>
+          <textarea name="opciones" rows="3" placeholder="Laura M. | 1058274558 | https://.../foto.jpg&#10;Julián R." required></textarea>
+          <p class="muted mt-8" style="font-size:12.5px;">El documento enlaza al candidato con su ficha real (jornada y programa). La foto es opcional.</p>
         </div>
         <div style="display:flex; gap:10px;">
           <button type="button" class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('modal-crear').style.display='none'">Cancelar</button>
@@ -112,27 +236,10 @@ require __DIR__ . '/includes/header.php';
     </div>
   </div>
   <script>
-let encuestaAConcerrar = null;
-
 function confirmarCierre(id, titulo) {
-  encuestaAConcerrar = id;
+  document.getElementById('cerrar-id').value = id;
   document.getElementById('modal-cerrar-titulo').textContent = titulo;
   document.getElementById('modal-cerrar').style.display = 'flex';
-}
-
-function cerrarEncuestaConfirmado() {
-  const id = encuestaAConcerrar;
-  document.getElementById('modal-cerrar').style.display = 'none';
-
-  const badge = document.getElementById('badge-' + id);
-  badge.textContent = 'Cerrada';
-  badge.classList.remove('badge-activa');
-  badge.classList.add('badge-cerrada');
-
-  document.getElementById('encuesta-' + id).style.opacity = '.85';
-
-  const btn = document.getElementById('btn-cerrar-' + id);
-  btn.outerHTML = '<button class="btn btn-ghost btn-block mt-16" disabled>Votación finalizada</button>';
 }
 </script>
 <?php require __DIR__ . '/includes/footer.php'; ?>
