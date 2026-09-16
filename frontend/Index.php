@@ -122,6 +122,7 @@ require __DIR__ . '/includes/header.php';
             <?php endif; ?>
 
             <?php if (count($propuestas) > 0): ?>
+            <p style="font-size:12px;color:var(--ink);font-weight:700;margin:14px 0 0;text-align:left;">Propuestas:</p>
             <ul class="candidate-proposals">
               <?php foreach ($propuestas as $p): ?>
                 <li><?= h($p) ?></li>
