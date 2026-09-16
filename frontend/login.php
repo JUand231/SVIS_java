@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="card" style="border-left:3px solid var(--red);">
             <span class="badge badge-cerrada">Voto ya registrado</span>
             <h2 style="font-size:19px; margin-top:14px;">Ya ejerciste tu derecho al voto</h2>
-            <p class="muted mt-8" style="font-size:13.5px;">Tu token ya fue utilizado en esta jornada electoral. Gracias
+            <p class="muted mt-8" style="font-size:13.5px;">Su token ya fue utilizado no puede votar de nuevo. Gracias
               por participar.</p>
             <a href="index.php" class="btn btn-solid btn-block mt-16">Volver a la bienvenida</a>
           </div>

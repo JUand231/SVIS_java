@@ -134,9 +134,9 @@ require __DIR__ . '/includes/header.php';
         <p class="muted mt-8" style="font-size:14px;"><?= h($encuestaDescripcion) ?></p>
       <?php endif; ?>
       <?php if ($miJornada !== null): ?>
-        <p class="muted mt-8" style="font-size:13.5px;">Mostrando solo candidatos de tu jornada: <span class="badge jornada-<?= h($miJornada) ?>"><?= h(jornadaTexto($miJornada)) ?></span></p>
+        <p class="muted mt-8" style="font-size:13.5px;">Solo saldran los candidatos de su jornada: <span class="badge jornada-<?= h($miJornada) ?>"><?= h(jornadaTexto($miJornada)) ?></span></p>
       <?php endif; ?>
-      <p class="muted mt-8" style="font-size:14px;">Elige tu candidato e ingresa tu Token OTP para confirmar el voto.</p>
+      <p class="muted mt-8" style="font-size:14px;">Elija su candidato e ingrese su Token OTP para confirmar el voto.</p>
 
       <?php if ($errorVoto !== null): ?>
         <div class="card mt-16" style="border-left:3px solid var(--red);">
@@ -147,7 +147,7 @@ require __DIR__ . '/includes/header.php';
 
       <?php if (count($candidatos) === 0): ?>
         <div class="card mt-24">
-          <p class="muted" style="font-size:14px;"><?= $miJornada !== null ? 'No hay candidatos para tu jornada en esta votación.' : 'Esta votación aún no tiene candidatos publicados.' ?></p>
+          <p class="muted" style="font-size:14px;"><?= $miJornada !== null ? 'No hay candidatos de su jornada en estas elecciones.' : 'Estas votaciónes aún no tiene candidatos publicados.' ?></p>
         </div>
       <?php else: ?>
         <div class="candidate-grid mt-24">
@@ -190,7 +190,7 @@ require __DIR__ . '/includes/header.php';
                 <div id="paso1-<?= $opId ?>">
                   <span class="muted" style="font-size:12.5px;">Paso 1 de 2 · Confirmar candidato</span>
                   <h3 style="font-size:18px; margin-top:8px;">Vas a votar por <?= h($nombre) ?></h3>
-                  <p class="muted mt-8" style="font-size:13.5px;">Esta acción no se puede deshacer. Se te pedirá tu Token OTP institucional para confirmar.</p>
+                  <p class="muted mt-8" style="font-size:13.5px;">Esta acción no se puede deshacer. Se le pedirá su Token OTP institucional para confirmar.</p>
                   <div style="display:flex; gap:10px; margin-top:24px;">
                     <button type="button" class="btn btn-ghost" style="flex:1;" onclick="cerrarModal(<?= $opId ?>)">Cancelar</button>
                     <button type="button" class="btn btn-stamp" style="flex:1;" onclick="irPaso2(<?= $opId ?>)">Continuar</button>
@@ -200,13 +200,13 @@ require __DIR__ . '/includes/header.php';
                 <div id="paso2-<?= $opId ?>" style="display:none; position:relative;">
                   <button type="button" class="modal-close" onclick="cerrarModal(<?= $opId ?>)">✕</button>
                   <span class="muted" style="font-size:12.5px;">Paso 2 de 2 · Confirmar con token</span>
-                  <h3 style="font-size:18px; margin-top:8px;">Confirma tu voto con tu Token OTP</h3>
+                  <h3 style="font-size:18px; margin-top:8px;">Confirme su voto con el Token OTP</h3>
 
                   <?php if ($miCodigo !== null): ?>
                     <div class="card mt-16" style="background:#f0fdf4; border:1px solid #86efac; text-align:center;">
-                      <p class="muted" style="font-size:12px;">Tu token para esta votación</p>
+                      <p class="muted" style="font-size:12px;">Su token para esta votación</p>
                       <p style="font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:700; letter-spacing:2px; margin-top:6px;"><?= h($miCodigo) ?></p>
-                      <?php if ($miEstadoToken === 'USADO'): ?><p class="muted" style="font-size:12px; color:#dc2626; margin-top:4px;">Ya usado — no podrás votar de nuevo.</p><?php endif; ?>
+                      <?php if ($miEstadoToken === 'USADO'): ?><p class="muted" style="font-size:12px; color:#dc2626; margin-top:4px;">Ya se uso, no podrás votar de nuevo.</p><?php endif; ?>
                     </div>
                   <?php else: ?>
                     <div class="card mt-16" style="border-left:3px solid var(--red);">
@@ -220,11 +220,10 @@ require __DIR__ . '/includes/header.php';
                     <input type="hidden" name="encuestaId" value="<?= (int) $encuestaId ?>">
                     <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
                     <div class="otp-box">
-                      <label for="token-<?= $opId ?>">Escribe tu Token OTP para confirmar</label>
+                      <label for="token-<?= $opId ?>">Escriba su Token OTP para confirmar</label>
                       <input class="input-otp" id="token-<?= $opId ?>" name="codigo" maxlength="8" placeholder="••••••••" autocomplete="one-time-code">
                     </div>
                     <div style="display:flex; gap:10px; margin-top:18px;">
-                      <button type="button" class="btn btn-ghost" style="flex:1;" onclick="irPaso1(<?= $opId ?>)">← Atrás</button>
                       <button type="submit" class="btn btn-stamp" style="flex:1;">Confirmar voto</button>
                     </div>
                   </form>

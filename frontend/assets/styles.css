@@ -162,18 +162,19 @@ a { color: inherit; text-decoration: none; }
 
 .candidate-photo-wrap {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  margin: 0 0 16px;
-  border-radius: 12px;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
   overflow: hidden;
   background: var(--cream);
+  border: 4px solid var(--line);
 }
 .candidate-photo {
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
   font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700; font-size: 44px;
+  font-weight: 700; font-size: 38px;
   color: var(--ink-soft);
 }
 .candidate-photo-img {
@@ -181,11 +182,12 @@ a { color: inherit; text-decoration: none; }
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center top;
 }
-.candidate-photo-wrap.jornada-manana { box-shadow: inset 0 0 0 4px var(--yellow); }
-.candidate-photo-wrap.jornada-tarde { box-shadow: inset 0 0 0 4px var(--red); }
-.candidate-photo-wrap.jornada-noche { box-shadow: inset 0 0 0 4px var(--blue); }
+.candidate-photo-wrap.jornada-manana { border-color: var(--yellow); }
+.candidate-photo-wrap.jornada-tarde { border-color: var(--red); }
+.candidate-photo-wrap.jornada-noche { border-color: var(--blue); }
 
 .candidate-name { font-size: 16.5px; text-align: center; }
 .candidate-program { font-size: 12px; color: var(--blue); font-weight: 600; text-align: center; margin-top: 3px; }
@@ -399,4 +401,60 @@ input:focus, textarea:focus { outline: none; border-color: var(--green); box-sha
 
 @media (max-width: 720px) {
   .footer-grid { grid-template-columns: 1fr; padding: 40px 20px 28px; }
+}
+/* ---- Filas de candidato en el formulario de crear encuesta ---- */
+.candidate-input-row {
+  display: grid;
+  grid-template-columns: 1.1fr .8fr 1.1fr 1.4fr auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.candidate-input-row .mini-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 5px;
+  display: block;
+}
+.candidate-input-row input {
+  padding: 9px 11px;
+  font-size: 13.5px;
+}
+.btn-remove-candidato {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--red-bg);
+  background: var(--red-bg);
+  color: var(--red);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-remove-candidato:hover { background: #F5D2CD; }
+
+.btn-add-candidato {
+  border: 1px dashed var(--green);
+  background: var(--green-bg);
+  color: var(--green);
+  border-radius: 10px;
+  padding: 11px;
+  width: 100%;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.btn-add-candidato:hover { background: #D4EEDC; }
+
+@media (max-width: 640px) {
+  .candidate-input-row { grid-template-columns: 1fr; }
+  .btn-remove-candidato { width: 100%; }
 }

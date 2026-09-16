@@ -234,10 +234,20 @@ require __DIR__ . '/includes/header.php';
           <textarea name="descripcion" rows="3" placeholder="Describe el propósito de la votación"><?= h($crearDescripcion) ?></textarea>
         </div>
         <div class="field">
-          <label>Opciones (una por línea, formato Nombre | documento | foto | propuesta1 ; propuesta2)</label>
-          <textarea name="opciones" rows="3" placeholder="Laura M. | 1058274558 | https://.../foto.jpg | Más bienestar ; Flexibilidad horaria&#10;Julián R. | 12345678 | https://.../foto.jpg | Comité de quejas ; Canal anónimo" required><?= h($crearOpcionesRaw) ?></textarea>
-          <p class="muted mt-8" style="font-size:12.5px;">Nombre y documento obligatorios (deben coincidir con el usuario registrado). La foto y las propuestas (separadas por ;) son opcionales.</p>
-        </div>
+  <label>Candidatos</label>
+  <p class="muted" style="font-size:12.5px; margin-bottom:12px;">
+    Nombre y documento son obligatorios (deben coincidir con el usuario registrado). Foto y propuestas son opcionales.
+  </p>
+
+  <div id="candidatos-container">
+    <!-- Las filas de candidato se agregan aquí con JS -->
+  </div>
+
+  <button type="button" class="btn-add-candidato" onclick="agregarCandidato()">+ Agregar candidato</button>
+
+  <!-- Este textarea oculto es el que realmente se envía al backend, armado por JS -->
+  <textarea name="opciones" id="opciones-hidden" style="display:none;"></textarea>
+</div>
         <div style="display:flex; gap:10px;">
           <button type="button" class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('modal-crear').style.display='none'">Cancelar</button>
           <button type="submit" class="btn btn-solid" style="flex:1;">Crear encuesta</button>
@@ -251,8 +261,87 @@ function confirmarCierre(id, titulo) {
   document.getElementById('modal-cerrar-titulo').textContent = titulo;
   document.getElementById('modal-cerrar').style.display = 'flex';
 }
+  <script>
+function confirmarCierre(id, titulo) {
+  document.getElementById('cerrar-id').value = id;
+  document.getElementById('modal-cerrar-titulo').textContent = titulo;
+  document.getElementById('modal-cerrar').style.display = 'flex';
+}
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+let contadorCandidatos = 0;
+
+function agregarCandidato(datos) {
+  datos = datos || {};
+  contadorCandidatos++;
+  const id = contadorCandidatos;
+
+  const row = document.createElement('div');
+  row.className = 'candidate-input-row';
+  row.id = 'candidato-row-' + id;
+  row.innerHTML = `
+    <div>
+      <span class="mini-label">Nombre completo</span>
+      <input type="text" class="c-nombre" placeholder="Ej. Laura M." value="${datos.nombre || ''}">
+    </div>
+    <div>
+      <span class="mini-label">Documento</span>
+      <input type="text" class="c-documento" placeholder="1058274558" value="${datos.documento || ''}">
+    </div>
+    <div>
+      <span class="mini-label">URL de la foto</span>
+      <input type="text" class="c-foto" placeholder="https://... (opcional)" value="${datos.foto || ''}">
+    </div>
+    <div>
+      <span class="mini-label">Propuestas (separadas por coma)</span>
+      <input type="text" class="c-propuestas" placeholder="Más bienestar, Flexibilidad horaria" value="${datos.propuestas || ''}">
+    </div>
+    <button type="button" class="btn-remove-candidato" onclick="quitarCandidato(${id})" title="Quitar candidato">✕</button>
+  `;
+  document.getElementById('candidatos-container').appendChild(row);
+}
+
+function quitarCandidato(id) {
+  const filas = document.querySelectorAll('.candidate-input-row');
+  if (filas.length <= 2) {
+    alert('Se necesitan mínimo 2 candidatos.');
+    return;
+  }
+  document.getElementById('candidato-row-' + id).remove();
+}
+
+agregarCandidato();
+agregarCandidato();
+
+document.querySelector('#modal-crear form').addEventListener('submit', function (e) {
+  const filas = document.querySelectorAll('.candidate-input-row');
+  const lineas = [];
+
+  filas.forEach(fila => {
+    const nombre = fila.querySelector('.c-nombre').value.trim();
+    const documento = fila.querySelector('.c-documento').value.trim();
+    const foto = fila.querySelector('.c-foto').value.trim();
+    const propuestasRaw = fila.querySelector('.c-propuestas').value.trim();
+    const propuestas = propuestasRaw.split(',').map(p => p.trim()).filter(p => p !== '').join(' ; ');
+
+    if (nombre !== '' && documento !== '') {
+      lineas.push(`${nombre} | ${documento} | ${foto} | ${propuestas}`);
+    }
+  });
+
+  if (lineas.length < 2) {
+    e.preventDefault();
+    alert('Completa nombre y documento de al menos 2 candidatos.');
+    return;
+  }
+
+  document.getElementById('opciones-hidden').value = lineas.join('\n');
+});
+</script>
+
 <?php if ($errorAdmin !== null): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
