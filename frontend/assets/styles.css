@@ -404,16 +404,18 @@ input:focus, textarea:focus { outline: none; border-color: var(--green); box-sha
 }
 /* ---- Filas de candidato en el formulario de crear encuesta ---- */
 .candidate-input-row {
+  position: relative;
   display: grid;
-  grid-template-columns: 1.1fr .8fr 1.1fr 1.4fr auto;
+  grid-template-columns: 1.4fr 1fr 1.4fr;
   gap: 10px;
-  align-items: end;
-  padding: 14px;
+  align-items: start;
+  padding: 34px 44px 16px 14px;
   background: var(--cream);
   border: 1px solid var(--line);
   border-radius: 10px;
   margin-bottom: 12px;
 }
+.candidate-input-row .c-prop-wrap { grid-column: 1 / -1; }
 .candidate-input-row .mini-label {
   font-size: 11.5px;
   font-weight: 600;
@@ -426,13 +428,16 @@ input:focus, textarea:focus { outline: none; border-color: var(--green); box-sha
   font-size: 13.5px;
 }
 .btn-remove-candidato {
-  width: 36px;
-  height: 36px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   border: 1px solid var(--red-bg);
   background: var(--red-bg);
   color: var(--red);
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -457,4 +462,10 @@ input:focus, textarea:focus { outline: none; border-color: var(--green); box-sha
 @media (max-width: 640px) {
   .candidate-input-row { grid-template-columns: 1fr; }
   .btn-remove-candidato { width: 100%; }
+}
+.candidatos-scroll {
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-bottom: 4px;
 }
