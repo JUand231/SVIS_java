@@ -21,4 +21,6 @@ public interface TokenOtpRepository {
     Optional<Token_OTP> buscarPorCodigoForUpdate(Connection c, String codigo, Long idUsuario, Long idEncuesta) throws SQLException;
 
     void marcarUsado(Connection c, String codigo) throws SQLException;
+
+    java.util.List<co.edu.sena.cimm.svis.model.Token_OTP> listarPorEncuesta(Long encuestaId);
 }

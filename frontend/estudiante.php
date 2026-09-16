@@ -83,6 +83,36 @@ if ($encuestaId !== null) {
     }
 }
 
+// 4) Token OTP de esta sesión para esta encuesta (para mostrarlo en el paso 2).
+$miCodigo = null;
+$miEstadoToken = null;
+$miJornada = null;
+if ($usuarioId !== null) {
+    [$httpP, $dataP] = apiGet('/api/perfil?usuarioId=' . urlencode((string) $usuarioId));
+    if ($httpP === 200 && is_array($dataP) && isset($dataP['ficha']['jornada'])) {
+        $miJornada = normalizarJornada($dataP['ficha']['jornada']);
+    }
+}
+if ($encuestaId !== null && $usuarioId !== null) {
+    [$httpT, $dataT] = apiGet('/api/tokens/generar?encuestaId=' . urlencode((string) $encuestaId));
+    if ($httpT === 200 && is_array($dataT)) {
+        foreach ($dataT as $t) {
+            $uid = $t['usuario_id'] ?? $t['usuarioId'] ?? $t['usuario_id'] ?? null;
+            if ($uid !== null && (int) $uid === (int) $usuarioId) {
+                $miCodigo = $t['codigo'] ?? null;
+                $miEstadoToken = $t['estado'] ?? null;
+                break;
+            }
+        }
+    }
+}
+// 4b) Si la encuesta tiene jornadas mezcladas, el votante solo ve su jornada (Index muestra todas).
+if ($miJornada !== null && count($candidatos) > 0) {
+    $filtrados = array_values(array_filter($candidatos, fn($c) => normalizarJornada($c['jornada'] ?? null) === $miJornada));
+    // Solo filtra si hay al menos 1 de su jornada; si no, deja vacío para mostrar mensaje específico.
+    $candidatos = $filtrados;
+}
+
 require __DIR__ . '/includes/header.php';
 ?>
   <main class="container mt-32" style="flex:1; padding-bottom:60px;">
@@ -103,6 +133,9 @@ require __DIR__ . '/includes/header.php';
       <?php if ($encuestaDescripcion !== ''): ?>
         <p class="muted mt-8" style="font-size:14px;"><?= h($encuestaDescripcion) ?></p>
       <?php endif; ?>
+      <?php if ($miJornada !== null): ?>
+        <p class="muted mt-8" style="font-size:13.5px;">Mostrando solo candidatos de tu jornada: <span class="badge jornada-<?= h($miJornada) ?>"><?= h(jornadaTexto($miJornada)) ?></span></p>
+      <?php endif; ?>
       <p class="muted mt-8" style="font-size:14px;">Elige tu candidato e ingresa tu Token OTP para confirmar el voto.</p>
 
       <?php if ($errorVoto !== null): ?>
@@ -114,7 +147,7 @@ require __DIR__ . '/includes/header.php';
 
       <?php if (count($candidatos) === 0): ?>
         <div class="card mt-24">
-          <p class="muted" style="font-size:14px;">Esta votación aún no tiene candidatos publicados.</p>
+          <p class="muted" style="font-size:14px;"><?= $miJornada !== null ? 'No hay candidatos para tu jornada en esta votación.' : 'Esta votación aún no tiene candidatos publicados.' ?></p>
         </div>
       <?php else: ?>
         <div class="candidate-grid mt-24">
@@ -168,6 +201,18 @@ require __DIR__ . '/includes/header.php';
                   <button type="button" class="modal-close" onclick="cerrarModal(<?= $opId ?>)">✕</button>
                   <span class="muted" style="font-size:12.5px;">Paso 2 de 2 · Confirmar con token</span>
                   <h3 style="font-size:18px; margin-top:8px;">Confirma tu voto con tu Token OTP</h3>
+
+                  <?php if ($miCodigo !== null): ?>
+                    <div class="card mt-16" style="background:#f0fdf4; border:1px solid #86efac; text-align:center;">
+                      <p class="muted" style="font-size:12px;">Tu token para esta votación</p>
+                      <p style="font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:700; letter-spacing:2px; margin-top:6px;"><?= h($miCodigo) ?></p>
+                      <?php if ($miEstadoToken === 'USADO'): ?><p class="muted" style="font-size:12px; color:#dc2626; margin-top:4px;">Ya usado — no podrás votar de nuevo.</p><?php endif; ?>
+                    </div>
+                  <?php else: ?>
+                    <div class="card mt-16" style="border-left:3px solid var(--red);">
+                      <p class="muted" style="font-size:13px;">Aún no tienes token para esta votación. Pide al administrador que genere los tokens.</p>
+                    </div>
+                  <?php endif; ?>
 
                   <form id="form-voto-<?= $opId ?>" method="post" action="estudiante.php<?= $idSel > 0 ? '?id=' . $idSel : '' ?>">
                     <input type="hidden" name="accion" value="votar">

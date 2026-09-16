@@ -111,6 +111,22 @@ public class JdbcTokenOtpRepository implements TokenOtpRepository {
         }
     }
 
+    @Override
+    public java.util.List<Token_OTP> listarPorEncuesta(Long encuestaId) {
+        String sql = "select " + Columnas + " from token_otp where encuesta_id = ? order by id";
+        java.util.List<Token_OTP> lista = new java.util.ArrayList<>();
+        try (Connection c = BaseDeDatos.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, encuestaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) lista.add(map(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error listando tokens", e);
+        }
+        return lista;
+    }
+
     private Token_OTP map(ResultSet rs) throws SQLException {
         Token_OTP t = new Token_OTP();
         t.setId(rs.getLong("id"));

@@ -160,7 +160,7 @@ a { color: inherit; text-decoration: none; }
   border-radius: 6px;
 }
 
-.candidate-photo-wrap { position: relative; width: 78px; height: 78px; margin: 0 auto 14px; }
+.candidate-photo-wrap { position: relative; width: 78px; height: 78px; margin: 0 auto 14px; background: transparent !important; }
 .candidate-photo {
   width: 100%; height: 100%;
   border-radius: 50%;
@@ -174,6 +174,9 @@ a { color: inherit; text-decoration: none; }
 .candidate-photo-wrap.jornada-manana .candidate-photo { border-color: var(--yellow); }
 .candidate-photo-wrap.jornada-tarde .candidate-photo { border-color: var(--red); }
 .candidate-photo-wrap.jornada-noche .candidate-photo { border-color: var(--blue); }
+.candidate-photo-wrap.jornada-manana,
+.candidate-photo-wrap.jornada-tarde,
+.candidate-photo-wrap.jornada-noche { background: transparent !important; }
 /* Foto real del candidato (foto_url de la BD); si no hay, se muestra la inicial. */
 .candidate-photo-img {
   position: absolute; inset: 0;

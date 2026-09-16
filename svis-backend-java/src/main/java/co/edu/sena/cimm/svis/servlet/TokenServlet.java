@@ -22,6 +22,30 @@ public class TokenServlet extends HttpServlet {
 
     }
 
+    // GET /api/tokens/generar?encuestaId=1 -> lista de tokens (para mostrar OTP en admin)
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        req.setCharacterEncoding("UTF-8");
+        try {
+            String idParam = req.getParameter("encuestaId");
+            if (idParam == null || idParam.trim().isEmpty()) {
+                resp.setStatus(400);
+                resp.getWriter().write(JsonUtil.toJson(new ApiError("DATOS", "encuestaId requerido")));
+                return;
+            }
+            Long id = Long.parseLong(idParam.trim());
+            resp.setStatus(200);
+            resp.getWriter().write(JsonUtil.toJson(token.listarPorEncuesta(id)));
+        } catch (NumberFormatException e) {
+            resp.setStatus(400);
+            resp.getWriter().write(JsonUtil.toJson(new ApiError("ID_INVALIDO", "encuestaId debe ser numero")));
+        } catch (Exception e) {
+            resp.setStatus(500);
+            resp.getWriter().write(JsonUtil.toJson(new ApiError("ERROR", e.getMessage())));
+        }
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");

@@ -36,4 +36,9 @@ public class TokenService {
         }
         return creados;
     }
+
+    public java.util.List<co.edu.sena.cimm.svis.model.Token_OTP> listarPorEncuesta(Long encuestaId) {
+        if (encuestaId == null) throw new RuntimeException("Encuesta requerida");
+        return tokens.listarPorEncuesta(encuestaId);
+    }
 }

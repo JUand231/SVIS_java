@@ -35,7 +35,7 @@ public class EncuestaService {
             throw new RuntimeException("Minimo 2 opciones");
         }
         // Formato por línea: "Nombre | documentoCandidato | fotoUrl"
-        // (documento y foto opcionales; el documento enlaza la ficha real).
+        // Nombre y documento OBLIGATORIOS; foto opcional.
         List<String> textos = new ArrayList<>();
         List<Long> candidatoIds = new ArrayList<>();
         List<String> fotos = new ArrayList<>();
@@ -50,14 +50,19 @@ public class EncuestaService {
             }
             String doc = partes.length > 1 ? partes[1].trim() : "";
             String foto = partes.length > 2 ? partes[2].trim() : "";
-            Long candId = null;
-            if (!doc.isEmpty()) {
-                Usuario u = usuariosRepository.obtenerPorDocumento(doc);
-                if (u == null) {
-                    throw new RuntimeException("No existe usuario con documento: " + doc);
-                }
-                candId = u.getId();
+            if (doc.isEmpty()) {
+                throw new RuntimeException("Falta documento en: \"" + texto + "\" — usa: Nombre | documento | foto");
             }
+            Usuario u = usuariosRepository.obtenerPorDocumento(doc);
+            if (u == null) {
+                throw new RuntimeException("No existe usuario con documento: " + doc);
+            }
+            // El nombre debe coincidir con el de la BD (evita suplantar documento).
+            String nombreBD = u.getNombre() == null ? "" : u.getNombre().trim();
+            if (!nombreBD.equalsIgnoreCase(texto)) {
+                throw new RuntimeException("El nombre \"" + texto + "\" no coincide con el registrado para documento " + doc + " (" + nombreBD + ")");
+            }
+            Long candId = u.getId();
             textos.add(texto);
             candidatoIds.add(candId);
             fotos.add(foto.isEmpty() ? null : foto);

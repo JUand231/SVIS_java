@@ -7,6 +7,10 @@ $titulo = 'Mis votaciones';
 $topRight = ['href' => 'logout.php', 'text' => 'Cerrar sesión', 'style' => 'btn-danger'];
 
 $errorAdmin = null;
+$crearTitulo = '';
+$crearDescripcion = '';
+$crearOpcionesRaw = '';
+$mantenerModalCrear = false;
 
 // Acciones del panel: crear / cerrar / generar tokens (con PRG).
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,11 +19,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($accion === 'crear') {
         $tituloN = trim($_POST['titulo'] ?? '');
         $descripcionN = trim($_POST['descripcion'] ?? '');
+        $crearOpcionesRaw = $_POST['opciones'] ?? '';
+        $crearTitulo = $tituloN;
+        $crearDescripcion = $descripcionN;
         // El textarea trae una opción por línea -> se parte por \n.
-        $lineas = preg_split('/\r\n|\r|\n/', $_POST['opciones'] ?? '');
+        $lineas = preg_split('/\r\n|\r|\n/', $crearOpcionesRaw);
         $opciones = array_values(array_filter(array_map('trim', $lineas), fn($t) => $t !== ''));
         if ($tituloN === '' || count($opciones) < 2) {
             $errorAdmin = 'Para crear se requiere título y mínimo 2 opciones.';
+            $mantenerModalCrear = true;
         } else {
             [$http, $data] = apiPost('/api/encuestas', [
                 'titulo' => $tituloN,
@@ -31,8 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } elseif ($http === 0) {
                 $errorAdmin = 'No se pudo conectar con el backend Java (¿Tomcat apagado?).';
+                $mantenerModalCrear = true;
             } else {
                 $errorAdmin = (is_array($data) && isset($data['mensaje'])) ? $data['mensaje'] : 'No se pudo crear la encuesta.';
+                $mantenerModalCrear = true;
             }
         }
     } elseif ($accion === 'cerrar') {
@@ -58,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$http, $data] = apiPost('/api/tokens/generar', ['encuestaId' => $id]);
             if ($http === 200) {
                 $n = is_array($data) ? (int) ($data['creados'] ?? 0) : 0;
-                header('Location: admin.php?msg=tokens&n=' . $n);
+                header('Location: admin.php?msg=tokens&n=' . $n . '&id=' . $id);
                 exit;
             } elseif ($http === 0) {
                 $errorAdmin = 'No se pudo conectar con el backend Java (¿Tomcat apagado?).';
@@ -126,9 +136,9 @@ require __DIR__ . '/includes/header.php';
     <?php endif; ?>
 
     <?php if ($errorAdmin !== null): ?>
-      <div class="card mt-16" style="border-left:3px solid var(--red);">
+      <div class="card mt-16" style="border-left:3px solid var(--red); display:none;" id="errorAdminCard">
         <span class="badge badge-cerrada">Atención</span>
-        <p class="muted mt-8" style="font-size:13.5px;"><?= h($errorAdmin) ?></p>
+        <p class="muted mt-8" style="font-size:13.5px;" id="errorAdminText"><?= h($errorAdmin) ?></p>
       </div>
     <?php endif; ?>
 
@@ -210,23 +220,23 @@ require __DIR__ . '/includes/header.php';
   </div>
 </div>
 
-  <div id="modal-crear" style="display:none; position:fixed; inset:0; background:rgba(22,35,61,.45); align-items:center; justify-content:center; z-index:10;">
+  <div id="modal-crear" style="display:<?= $mantenerModalCrear ? 'flex' : 'none' ?>; position:fixed; inset:0; background:rgba(22,35,61,.45); align-items:center; justify-content:center; z-index:10;">
     <div class="card modal-card-lg">
       <h3 style="font-size:20px;">Nueva encuesta</h3>
       <form class="mt-16" method="post" action="admin.php">
         <input type="hidden" name="accion" value="crear">
         <div class="field">
           <label>Título</label>
-          <input name="titulo" type="text" placeholder="Ej. Representante de Bienestar 2026" required>
+          <input name="titulo" type="text" placeholder="Ej. Representante de Bienestar 2026" required value="<?= h($crearTitulo) ?>">
         </div>
         <div class="field">
           <label>Descripción institucional</label>
-          <textarea name="descripcion" rows="3" placeholder="Describe el propósito de la votación"></textarea>
+          <textarea name="descripcion" rows="3" placeholder="Describe el propósito de la votación"><?= h($crearDescripcion) ?></textarea>
         </div>
         <div class="field">
           <label>Opciones (una por línea, formato Nombre | documento | foto)</label>
-          <textarea name="opciones" rows="3" placeholder="Laura M. | 1058274558 | https://.../foto.jpg&#10;Julián R." required></textarea>
-          <p class="muted mt-8" style="font-size:12.5px;">El documento enlaza al candidato con su ficha real (jornada y programa). La foto es opcional.</p>
+          <textarea name="opciones" rows="3" placeholder="Laura M. | 1058274558 | https://.../foto.jpg&#10;Julián R. | 12345678 | https://.../foto.jpg" required><?= h($crearOpcionesRaw) ?></textarea>
+          <p class="muted mt-8" style="font-size:12.5px;">Nombre y documento obligatorios (deben coincidir con el usuario registrado). La foto es opcional.</p>
         </div>
         <div style="display:flex; gap:10px;">
           <button type="button" class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('modal-crear').style.display='none'">Cancelar</button>
@@ -242,4 +252,19 @@ function confirmarCierre(id, titulo) {
   document.getElementById('modal-cerrar').style.display = 'flex';
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<?php if ($errorAdmin !== null): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var msg = document.getElementById('errorAdminText') ? document.getElementById('errorAdminText').textContent : '';
+  if (msg.indexOf('2 opciones') !== -1 || msg.indexOf('Mínimo 2') !== -1) {
+    Swal.fire({icon:'warning', title:'Faltan opciones', text:'La encuesta necesita mínimo 2 opciones válidas. Agrega una más.', confirmButtonColor:'#1a5632'});
+  } else if (msg.indexOf('No existe usuario') !== -1 || msg.indexOf('documento') !== -1) {
+    Swal.fire({icon:'error', title:'Documento no encontrado', text: msg, confirmButtonColor:'#dc2626'});
+  } else {
+    Swal.fire({icon:'error', title:'Atención', text: msg, confirmButtonColor:'#dc2626'});
+  }
+});
+</script>
+<?php endif; ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>
