@@ -159,6 +159,21 @@ require __DIR__ . '/includes/header.php';
             $prog = trim((string) ($c['programa'] ?? ''));
             $foto = trim((string) ($c['fotoUrl'] ?? ''));
             $norm = normalizarJornada($jor);
+            $propuestas = [];
+            if (isset($c['propuestas'])) {
+                if (is_array($c['propuestas'])) {
+                    foreach ($c['propuestas'] as $pp) {
+                        $t = trim((string) $pp);
+                        if ($t !== '') { $propuestas[] = $t; }
+                    }
+                } else {
+                    foreach (preg_split('/\r\n|\r|\n|;/', (string) $c['propuestas']) as $pp) {
+                        $t = trim($pp);
+                        if ($t !== '') { $propuestas[] = $t; }
+                    }
+                }
+            }
+            $propuestas = array_slice($propuestas, 0, 3);
           ?>
             <div class="card candidate-card">
               <div class="candidate-top">
@@ -176,6 +191,14 @@ require __DIR__ . '/includes/header.php';
               <h3 class="candidate-name"><?= h($nombre) ?></h3>
               <?php if ($prog !== ''): ?>
                 <p class="candidate-program">🎓 <?= h($prog) ?></p>
+              <?php endif; ?>
+              <?php if (count($propuestas) > 0): ?>
+                <p style="font-size:12px;color:#000;font-weight:700;margin:14px 0 0;text-align:left;">Propuestas:</p>
+                <ul class="candidate-proposals">
+                  <?php foreach ($propuestas as $p): ?>
+                    <li><?= h($p) ?></li>
+                  <?php endforeach; ?>
+                </ul>
               <?php endif; ?>
               <div class="candidate-footer">
                 <button class="btn btn-stamp btn-block" onclick="abrirModal(<?= $opId ?>)">Votar por <?= h($nombre) ?></button>

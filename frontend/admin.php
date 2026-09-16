@@ -116,7 +116,7 @@ require __DIR__ . '/includes/header.php';
         <h1 style="font-size:24px;">Encuestas electorales</h1>
         <p class="muted mt-8" style="font-size:14px;">Gestiona la apertura, cierre y resultados de cada proceso.</p>
       </div>
-      <button class="btn btn-stamp" onclick="document.getElementById('modal-crear').style.display='flex'">
+      <button class="btn btn-stamp" onclick="abrirModalCrear()">
         + Nueva encuesta
       </button>
     </div>
@@ -220,8 +220,8 @@ require __DIR__ . '/includes/header.php';
   </div>
 </div>
 
-  <div id="modal-crear" style="display:<?= $mantenerModalCrear ? 'flex' : 'none' ?>; position:fixed; inset:0; background:rgba(22,35,61,.45); align-items:center; justify-content:center; z-index:10;">
-    <div class="card modal-card-lg">
+  <div id="modal-crear" style="display:<?= $mantenerModalCrear ? 'flex' : 'none' ?>; position:fixed; inset:0; background:rgba(22,35,61,.45); align-items:flex-start; justify-content:center; z-index:10; overflow-y:auto; padding:24px 16px;">
+    <div class="card modal-card-lg" style="margin:auto; max-height:calc(100vh - 48px); overflow-y:auto;">
       <h3 style="font-size:20px;">Nueva encuesta</h3>
       <form class="mt-16" method="post" action="admin.php">
         <input type="hidden" name="accion" value="crear">
@@ -249,12 +249,27 @@ require __DIR__ . '/includes/header.php';
   <textarea name="opciones" id="opciones-hidden" style="display:none;"></textarea>
 </div>
         <div style="display:flex; gap:10px;">
-          <button type="button" class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('modal-crear').style.display='none'">Cancelar</button>
+          <button type="button" class="btn btn-ghost" style="flex:1;" onclick="cerrarModalCrear()">Cancelar</button>
           <button type="submit" class="btn btn-solid" style="flex:1;">Crear encuesta</button>
         </div>
       </form>
     </div>
   </div>
+<script>
+// Modal crear: con scroll propio y fondo bloqueado.
+function abrirModalCrear() {
+  document.getElementById('modal-crear').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function cerrarModalCrear() {
+  document.getElementById('modal-crear').style.display = 'none';
+  document.body.style.overflow = '';
+}
+// Si el modal viene abierto por un error de validación, bloquear el fondo también.
+if (document.getElementById('modal-crear').style.display === 'flex') {
+  document.body.style.overflow = 'hidden';
+}
+</script>
   <script>
 function confirmarCierre(id, titulo) {
   document.getElementById('cerrar-id').value = id;
@@ -285,19 +300,19 @@ function agregarCandidato(datos) {
   row.innerHTML = `
     <div>
       <span class="mini-label">Nombre completo</span>
-      <input type="text" class="c-nombre" placeholder="Ej. Laura M." value="${datos.nombre || ''}">
+      <input type="text" class="c-nombre" placeholder="Nombre candidato" value="${datos.nombre || ''}">
     </div>
     <div>
       <span class="mini-label">Documento</span>
-      <input type="text" class="c-documento" placeholder="1058274558" value="${datos.documento || ''}">
+      <input type="text" class="c-documento" placeholder="Documento candidato" value="${datos.documento || ''}">
     </div>
     <div>
       <span class="mini-label">URL de la foto</span>
-      <input type="text" class="c-foto" placeholder="https://... (opcional)" value="${datos.foto || ''}">
+      <input type="text" class="c-foto" placeholder="URL Foto" value="${datos.foto || ''}">
     </div>
-    <div>
-      <span class="mini-label">Propuestas (separadas por coma)</span>
-      <input type="text" class="c-propuestas" placeholder="Más bienestar, Flexibilidad horaria" value="${datos.propuestas || ''}">
+    <div class="c-prop-wrap">
+      <span class="mini-label">Propuestas</span>
+      <textarea class="c-propuestas" rows="2" placeholder="Espacio para colocar las propuestas (separadas por coma)">${datos.propuestas || ''}</textarea>
     </div>
     <button type="button" class="btn-remove-candidato" onclick="quitarCandidato(${id})" title="Quitar candidato">✕</button>
   `;

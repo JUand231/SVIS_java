@@ -131,8 +131,7 @@ require __DIR__ . '/includes/header.php';
             <?php endif; ?>
 
             <div class="candidate-footer">
-              <span class="link-plan">Ver plan de gobierno <span>→</span></span>
-              <a href="login.php" class="btn btn-solid btn-block" style="font-size:13.5px;">🔒 Iniciar sesión para votar</a>
+              <a href="login.php" class="btn btn-solid btn-block" style="font-size:13.5px;"> Iniciar sesión para votar</a>
             </div>
           </div>
         <?php endforeach; ?>
