@@ -56,9 +56,7 @@ require __DIR__ . '/includes/header.php';
     </div>
 
     <section id="candidatos" class="container" style="padding:64px 40px;">
-      <h2 style="font-size:24px;">
-        <?= $encuestaActiva !== null ? 'Candidatos · ' . h($encuestaActiva['titulo'] ?? '') : 'Candidatos' ?>
-      </h2>
+      <h2 style="font-size:24px;">Candidatos por jornada</h2>
       <p class="muted mt-8" style="font-size:14px;">Conoce a los aprendices postulados para representarte.</p>
 
       <?php if ($errorIndex !== null): ?>
@@ -69,24 +67,13 @@ require __DIR__ . '/includes/header.php';
         <div class="card mt-24">
           <p class="muted" style="font-size:14px;">Aún no hay candidatos publicados. Vuelve pronto.</p>
         </div>
-      <?php else:
-        // Tabs con las jornadas reales presentes (sin inventar ninguna).
-        $jorKeys = [];
-        foreach ($candidatos as $c) {
-            $jr = trim((string) ($c['jornada'] ?? ''));
-            if ($jr !== '' && !in_array($jr, $jorKeys, true)) {
-                $jorKeys[] = $jr;
-            }
-        }
-      ?>
-      <?php if (count($jorKeys) > 0): ?>
+      <?php else: ?>
       <div class="jornada-tabs">
         <button class="jornada-tab active" data-filter="todas">Todas las jornadas</button>
-        <?php foreach ($jorKeys as $jk): ?>
-          <button class="jornada-tab" data-filter="<?= h($jk) ?>">Jornada <?= h($jk) ?></button>
-        <?php endforeach; ?>
+        <button class="jornada-tab" data-filter="manana">Jornada Mañana</button>
+        <button class="jornada-tab" data-filter="tarde">Jornada Tarde</button>
+        <button class="jornada-tab" data-filter="noche">Jornada Noche</button>
       </div>
-      <?php endif; ?>
 
       <div class="candidate-grid">
         <?php foreach ($candidatos as $i => $c):
@@ -96,13 +83,30 @@ require __DIR__ . '/includes/header.php';
           $foto = trim((string) ($c['fotoUrl'] ?? ''));
           $norm = normalizarJornada($jor);
           $colorClass = $norm !== null ? 'jornada-' . $norm : '';
-          $clave = $jor !== '' ? $jor : 'sin-jornada';
+          $clave = $norm ?? ($jor !== '' ? strtolower($jor) : 'sin-jornada');
+          // Propuestas reales del backend (columna propuestas, una por línea).
+          // Acepta array (JSON) o string con saltos/" ; " por compatibilidad.
+          $propuestas = [];
+          if (isset($c['propuestas'])) {
+              if (is_array($c['propuestas'])) {
+                  foreach ($c['propuestas'] as $pp) {
+                      $t = trim((string) $pp);
+                      if ($t !== '') { $propuestas[] = $t; }
+                  }
+              } else {
+                  foreach (preg_split('/\r\n|\r|\n|;/', (string) $c['propuestas']) as $pp) {
+                      $t = trim($pp);
+                      if ($t !== '') { $propuestas[] = $t; }
+                  }
+              }
+          }
+          $propuestas = array_slice($propuestas, 0, 3);
         ?>
           <div class="card candidate-card" data-jornada="<?= h($clave) ?>">
             <div class="candidate-top">
               <span class="candidate-chip">N° <?= $i + 1 ?></span>
               <?php if ($jor !== ''): ?>
-                <span class="badge <?= h($norm !== null ? 'jornada-' . $norm : 'badge-activa') ?>">Jornada <?= h($jor) ?></span>
+                <span class="badge <?= h($norm !== null ? 'jornada-' . $norm : 'badge-activa') ?>"> Jornada <?= h(jornadaTexto($norm ?? $jor)) ?></span>
               <?php endif; ?>
             </div>
 
@@ -117,8 +121,17 @@ require __DIR__ . '/includes/header.php';
               <p class="candidate-program">🎓 <?= h($prog) ?></p>
             <?php endif; ?>
 
+            <?php if (count($propuestas) > 0): ?>
+            <ul class="candidate-proposals">
+              <?php foreach ($propuestas as $p): ?>
+                <li><?= h($p) ?></li>
+              <?php endforeach; ?>
+            </ul>
+            <?php endif; ?>
+
             <div class="candidate-footer">
-              <a href="login.php" class="btn btn-solid btn-block" style="font-size:13.5px;"> Iniciar sesión para votar</a>
+              <span class="link-plan">Ver plan de gobierno <span>→</span></span>
+              <a href="login.php" class="btn btn-solid btn-block" style="font-size:13.5px;">🔒 Iniciar sesión para votar</a>
             </div>
           </div>
         <?php endforeach; ?>

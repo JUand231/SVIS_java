@@ -34,24 +34,44 @@ public class EncuestaService {
         if (textosOpciones == null) {
             throw new RuntimeException("Minimo 2 opciones");
         }
-        // Formato por línea: "Nombre | documentoCandidato | fotoUrl"
-        // Nombre y documento OBLIGATORIOS; foto opcional.
+        // Formato por línea: "Nombre | documentoCandidato | fotoUrl | prop1 ; prop2"
+        // Nombre y documento OBLIGATORIOS; foto y propuestas opcionales.
         List<String> textos = new ArrayList<>();
         List<Long> candidatoIds = new ArrayList<>();
         List<String> fotos = new ArrayList<>();
+        List<String> propuestasList = new ArrayList<>();
         for (String t : textosOpciones) {
             if (t == null || t.trim().isEmpty()) {
                 continue;
             }
-            String[] partes = t.trim().split("\\|", 3);
+            String[] partes = t.trim().split("\\|", 4);
             String texto = partes[0].trim();
             if (texto.isEmpty()) {
                 continue;
             }
             String doc = partes.length > 1 ? partes[1].trim() : "";
             String foto = partes.length > 2 ? partes[2].trim() : "";
+            String propsRaw = partes.length > 3 ? partes[3].trim() : "";
+            // Propuestas separadas por ";" o salto de línea -> se guardan una por línea.
+            String propsNorm = null;
+            if (!propsRaw.isEmpty()) {
+                String[] seps = propsRaw.split("[;\\n]+");
+                List<String> limpias = new ArrayList<>();
+                for (String s : seps) {
+                    String s2 = s.trim();
+                    if (!s2.isEmpty()) { limpias.add(s2); }
+                }
+                if (!limpias.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int k = 0; k < limpias.size(); k++) {
+                        if (k > 0) { sb.append("\n"); }
+                        sb.append(limpias.get(k));
+                    }
+                    propsNorm = sb.toString();
+                }
+            }
             if (doc.isEmpty()) {
-                throw new RuntimeException("Falta documento en: \"" + texto + "\" — usa: Nombre | documento | foto");
+                throw new RuntimeException("Falta documento en: \"" + texto + "\" — usa: Nombre | documento | foto | prop1 ; prop2");
             }
             Usuario u = usuariosRepository.obtenerPorDocumento(doc);
             if (u == null) {
@@ -66,6 +86,7 @@ public class EncuestaService {
             textos.add(texto);
             candidatoIds.add(candId);
             fotos.add(foto.isEmpty() ? null : foto);
+            propuestasList.add(propsNorm);
         }
         if (textos.size() < 2) {
             throw new RuntimeException("Minimo 2 opciones");
@@ -73,7 +94,7 @@ public class EncuestaService {
         long nuevaId = encuestasRepository.crearEncuesta(titulo.trim(), descripcion == null ? "" : descripcion.trim());
 
         for (int i = 0; i < textos.size(); i++) {
-            opcionesRepository.crearOpcion(nuevaId, candidatoIds.get(i), textos.get(i), fotos.get(i));
+            opcionesRepository.crearOpcion(nuevaId, candidatoIds.get(i), textos.get(i), fotos.get(i), propuestasList.get(i));
         }
         return nuevaId;
     }
@@ -132,6 +153,16 @@ public class EncuestaService {
             }
             r.votos = o.getVotos_total();
             r.porcentaje = total == 0 ? 0 : (o.getVotos_total() * 100.0 / total);
+            // Propuestas: una por línea en BD -> lista para el front.
+            r.propuestas = new ArrayList<>();
+            String rawProps = o.getPropuestas();
+            if (rawProps != null && !rawProps.trim().isEmpty()) {
+                String[] seps = rawProps.split("[\\r\\n;]+");
+                for (String s : seps) {
+                    String s2 = s.trim();
+                    if (!s2.isEmpty()) { r.propuestas.add(s2); }
+                }
+            }
             res.add(r);
         }
         return res;
