@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-09-2026 a las 21:29:35
+-- Tiempo de generación: 15-09-2026 a las 23:48:27
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -46,6 +46,13 @@ CREATE TABLE `ficha` (
   `programa` varchar(150) NOT NULL,
   `jornada` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `ficha`
+--
+
+INSERT INTO `ficha` (`id`, `numero`, `programa`, `jornada`) VALUES
+(1, '3232460', 'ADSO', 'Manana');
 
 -- --------------------------------------------------------
 
@@ -99,7 +106,7 @@ CREATE TABLE `usuario` (
 
 INSERT INTO `usuario` (`id`, `username`, `contrasenia`, `nombre`, `documento`, `ficha_id`, `rol`) VALUES
 (1, 'juanda', '123', 'juanAdmin', '123456789', NULL, 'ADMIN'),
-(2, 'sofias', '123', 'sofiaAprendiz', '12345678', NULL, 'USUARIO');
+(2, 'sofias', '123', 'sofiaAprendiz', '1058274558', 1, 'USUARIO');
 
 --
 -- Índices para tablas volcadas
@@ -152,25 +159,25 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `encuesta`
 --
 ALTER TABLE `encuesta`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `ficha`
 --
 ALTER TABLE `ficha`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `opcion`
 --
 ALTER TABLE `opcion`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `token_otp`
 --
 ALTER TABLE `token_otp`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
