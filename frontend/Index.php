@@ -12,13 +12,28 @@ $topRight = ['href' => 'login.php', 'text' => 'Iniciar Sesión', 'style' => 'btn
 
 $candidatos = [];
 $encuestaActiva = null;
+$encuestasActivas = [];
 $errorIndex = null;
 
-// Candidatos reales: primera encuesta activa + sus opciones.
+// Candidatos reales: encuesta activa seleccionada (?encuesta=) o la más nueva + sus opciones.
 // GET /api/encuestas  ->  GET /api/resultados?encuestaId= ({opcionId, texto})
 [$httpIndex, $dataIndex] = apiGet('/api/encuestas');
 if ($httpIndex === 200 && is_array($dataIndex) && count($dataIndex) > 0) {
-    $encuestaActiva = $dataIndex[0];
+    $encuestasActivas = array_values(array_filter($dataIndex, fn($e) => strtoupper((string) ($e['estado'] ?? 'ACTIVA')) === 'ACTIVA'));
+    if (count($encuestasActivas) === 0) {
+        $encuestasActivas = array_values($dataIndex);
+    }
+    usort($encuestasActivas, fn($a, $b) => (int) ($a['Id'] ?? $a['id'] ?? 0) <=> (int) ($b['Id'] ?? $b['id'] ?? 0));
+    $selIndex = isset($_GET['encuesta']) ? (int) $_GET['encuesta'] : 0;
+    $encuestaActiva = end($encuestasActivas);
+    if ($selIndex > 0) {
+        foreach ($encuestasActivas as $e) {
+            if ((int) ($e['Id'] ?? $e['id'] ?? 0) === $selIndex) {
+                $encuestaActiva = $e;
+                break;
+            }
+        }
+    }
     $eidIndex = (int) ($encuestaActiva['Id'] ?? $encuestaActiva['id'] ?? 0);
     if ($eidIndex > 0) {
         [$httpRes, $dataRes] = apiGet('/api/resultados?encuestaId=' . $eidIndex);
@@ -58,6 +73,17 @@ require __DIR__ . '/includes/header.php';
     <section id="candidatos" class="container" style="padding:64px 40px;">
       <h2 style="font-size:24px;">Candidatos por jornada</h2>
       <p class="muted mt-8" style="font-size:14px;">Conoce a los aprendices postulados para representarte.</p>
+
+      <?php if (count($encuestasActivas) > 1): ?>
+      <div class="jornada-tabs" style="margin-top:16px;">
+        <?php foreach ($encuestasActivas as $e):
+          $eid = (int) ($e['Id'] ?? $e['id'] ?? 0);
+          $esSel = $encuestaActiva !== null && (int) ($encuestaActiva['Id'] ?? $encuestaActiva['id'] ?? 0) === $eid;
+        ?>
+          <a href="index.php?encuesta=<?= $eid ?>#candidatos" class="jornada-tab <?= $esSel ? 'active' : '' ?>" style="text-decoration:none;"><?= h($e['titulo'] ?? ('Encuesta #' . $eid)) ?></a>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
 
       <?php if ($errorIndex !== null): ?>
         <div class="card mt-24" style="border-left:3px solid var(--red);">

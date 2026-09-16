@@ -41,8 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['accion'] ?? '') === 'votar
     }
 }
 
-// 2) Cargar la encuesta: ?id= puntual o la primera activa.
+// 2) Cargar la encuesta: ?id= puntual o la más nueva activa.
 //    GET /api/encuestas?id=  |  GET /api/encuestas (solo activas)
+$encuestasDisponibles = [];
 $idSel = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($idSel > 0) {
     [$http, $data] = apiGet('/api/encuestas?id=' . $idSel);
@@ -56,7 +57,9 @@ if ($idSel > 0) {
 } else {
     [$http, $data] = apiGet('/api/encuestas');
     if ($http === 200 && is_array($data) && count($data) > 0) {
-        $encuesta = $data[0];
+        $encuestasDisponibles = array_values($data);
+        usort($encuestasDisponibles, fn($a, $b) => (int) ($a['Id'] ?? $a['id'] ?? 0) <=> (int) ($b['Id'] ?? $b['id'] ?? 0));
+        $encuesta = end($encuestasDisponibles);
     } elseif ($http === 0) {
         $errorPagina = 'No se pudo conectar con el backend Java (¿Tomcat apagado?).';
     }
@@ -132,6 +135,16 @@ require __DIR__ . '/includes/header.php';
       <h1 style="font-size:23px; margin-top:12px;"><?= h($encuestaTitulo !== '' ? $encuestaTitulo : ('Encuesta #' . (int) $encuestaId)) ?></h1>
       <?php if ($encuestaDescripcion !== ''): ?>
         <p class="muted mt-8" style="font-size:14px;"><?= h($encuestaDescripcion) ?></p>
+      <?php endif; ?>
+      <?php if (count($encuestasDisponibles) > 1): ?>
+        <div class="jornada-tabs" style="margin-top:16px;">
+          <?php foreach ($encuestasDisponibles as $e):
+            $eid = (int) ($e['Id'] ?? $e['id'] ?? 0);
+            $esSel = $encuestaId !== null && (int) $encuestaId === $eid;
+          ?>
+            <a href="estudiante.php?id=<?= $eid ?>" class="jornada-tab <?= $esSel ? 'active' : '' ?>" style="text-decoration:none;"><?= h($e['titulo'] ?? ('Encuesta #' . $eid)) ?></a>
+          <?php endforeach; ?>
+        </div>
       <?php endif; ?>
       <?php if ($miJornada !== null): ?>
         <p class="muted mt-8" style="font-size:13.5px;">Solo saldran los candidatos de su jornada: <span class="badge jornada-<?= h($miJornada) ?>"><?= h(jornadaTexto($miJornada)) ?></span></p>

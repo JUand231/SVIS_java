@@ -237,11 +237,11 @@ require __DIR__ . '/includes/header.php';
 
     <div class="field mt-16">
       <label>Título</label>
-      <input name="titulo" id="input-titulo" type="text" placeholder="Ej. Representante de Bienestar 2026" required value="<?= h($crearTitulo) ?>">
+      <input name="titulo" id="input-titulo" type="text" placeholder="Ej. Representante de Bienestar 2026" value="<?= h($crearTitulo) ?>">
     </div>
     <div class="field">
       <label>Descripción institucional</label>
-      <textarea name="descripcion" rows="3" placeholder="Describe el propósito de la votación"><?= h($crearDescripcion) ?></textarea>
+      <textarea name="descripcion" id="input-descripcion" rows="3" placeholder="Describe el propósito de la votación"><?= h($crearDescripcion) ?></textarea>
     </div>
 
     <div style="display:flex; gap:10px;">
@@ -310,19 +310,19 @@ function agregarCandidato(datos) {
   row.innerHTML = `
   <div>
     <span class="mini-label">Nombre completo</span>
-    <input type="text" class="c-nombre" placeholder="Nombre que coincida en la BD" value="${datos.nombre || ''}">
+    <input type="text" class="c-nombre" placeholder="Nombre del candidato" value="${datos.nombre || ''}">
   </div>
   <div>
     <span class="mini-label">Documento</span>
-    <input type="text" class="c-documento" placeholder="Documento que coincida con el nombre" value="${datos.documento || ''}">
+    <input type="text" class="c-documento" placeholder="Documento del candidato" value="${datos.documento || ''}">
   </div>
   <div>
     <span class="mini-label">URL de la foto</span>
-    <input type="text" class="c-foto" placeholder="URL (no obligatoria)" value="${datos.foto || ''}">
+    <input type="text" class="c-foto" placeholder="URL Foto" value="${datos.foto || ''}">
   </div>
   <div class="c-prop-wrap">
     <span class="mini-label">Propuestas</span>
-    <textarea class="c-propuestas" rows="2" placeholder="Espacio para colocar las propuestas (separadas por coma)">${datos.propuestas || ''}</textarea>
+      <textarea class="c-propuestas" rows="3" placeholder="Espacio para colocar las propuestas (separadas por coma)">${datos.propuestas || ''}</textarea>
   </div>
   <button type="button" class="btn-remove-candidato" onclick="quitarCandidato(${id})" title="Quitar candidato">✕</button>
 `;
@@ -332,7 +332,7 @@ function agregarCandidato(datos) {
 function quitarCandidato(id) {
   const filas = document.querySelectorAll('.candidate-input-row');
   if (filas.length <= 2) {
-    alert('Se necesitan mínimo 2 candidatos.');
+    Swal.fire({icon:'info', title:'Mínimo 2 candidatos', text:'Se necesitan mínimo 2 candidatos.', confirmButtonColor:'#1a5632'});
     return;
   }
   document.getElementById('candidato-row-' + id).remove();
@@ -341,7 +341,12 @@ function quitarCandidato(id) {
 function irPasoCandidatos() {
   const titulo = document.getElementById('input-titulo').value.trim();
   if (titulo === '') {
-    alert('Escribe el título de la encuesta antes de continuar.');
+    Swal.fire({icon:'warning', title:'Falta el título', text:'Escribe el título de la encuesta antes de continuar.', confirmButtonColor:'#1a5632'});
+    return;
+  }
+  const descripcion = document.getElementById('input-descripcion').value.trim();
+  if (descripcion === '') {
+    Swal.fire({icon:'warning', title:'Falta la descripción', text:'Escribe la descripción institucional antes de continuar.', confirmButtonColor:'#1a5632'});
     return;
   }
   document.getElementById('paso-encuesta-1').style.display = 'none';
@@ -376,7 +381,7 @@ document.getElementById('form-crear-encuesta').addEventListener('submit', functi
 
   if (lineas.length < 2) {
     e.preventDefault();
-    alert('Completa nombre y documento de al menos 2 candidatos.');
+    Swal.fire({icon:'warning', title:'Faltan candidatos', text:'Completa nombre y documento de al menos 2 candidatos.', confirmButtonColor:'#1a5632'});
     return;
   }
 
