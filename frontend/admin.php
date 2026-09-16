@@ -223,36 +223,52 @@ require __DIR__ . '/includes/header.php';
   <div id="modal-crear" style="display:<?= $mantenerModalCrear ? 'flex' : 'none' ?>; position:fixed; inset:0; background:rgba(22,35,61,.45); align-items:flex-start; justify-content:center; z-index:10; overflow-y:auto; padding:24px 16px;">
     <div class="card modal-card-lg" style="margin:auto; max-height:calc(100vh - 48px); overflow-y:auto;">
       <h3 style="font-size:20px;">Nueva encuesta</h3>
-      <form class="mt-16" method="post" action="admin.php">
-        <input type="hidden" name="accion" value="crear">
-        <div class="field">
-          <label>Título</label>
-          <input name="titulo" type="text" placeholder="Ej. Representante de Bienestar 2026" required value="<?= h($crearTitulo) ?>">
-        </div>
-        <div class="field">
-          <label>Descripción institucional</label>
-          <textarea name="descripcion" rows="3" placeholder="Describe el propósito de la votación"><?= h($crearDescripcion) ?></textarea>
-        </div>
-        <div class="field">
-  <label>Candidatos</label>
-  <p class="muted" style="font-size:12.5px; margin-bottom:12px;">
-    Nombre y documento son obligatorios (deben coincidir con el usuario registrado). Foto y propuestas son opcionales.
-  </p>
+      <form class="mt-16" method="post" action="admin.php" id="form-crear-encuesta">
+  <input type="hidden" name="accion" value="crear">
 
-  <div id="candidatos-container">
-    <!-- Las filas de candidato se agregan aquí con JS -->
+  <div class="step-indicator">
+    <span id="step-bar-1" class="done"></span>
+    <span id="step-bar-2"></span>
   </div>
 
-  <button type="button" class="btn-add-candidato" onclick="agregarCandidato()">+ Agregar candidato</button>
+  <!-- Paso 1: título y descripción -->
+  <div id="paso-encuesta-1">
+    <span class="muted" style="font-size:12.5px;">Paso 1 de 2 · Datos de la encuesta</span>
 
-  <!-- Este textarea oculto es el que realmente se envía al backend, armado por JS -->
-  <textarea name="opciones" id="opciones-hidden" style="display:none;"></textarea>
-</div>
-        <div style="display:flex; gap:10px;">
-          <button type="button" class="btn btn-ghost" style="flex:1;" onclick="cerrarModalCrear()">Cancelar</button>
-          <button type="submit" class="btn btn-solid" style="flex:1;">Crear encuesta</button>
-        </div>
-      </form>
+    <div class="field mt-16">
+      <label>Título</label>
+      <input name="titulo" id="input-titulo" type="text" placeholder="Ej. Representante de Bienestar 2026" required value="<?= h($crearTitulo) ?>">
+    </div>
+    <div class="field">
+      <label>Descripción institucional</label>
+      <textarea name="descripcion" rows="3" placeholder="Describe el propósito de la votación"><?= h($crearDescripcion) ?></textarea>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <button type="button" class="btn btn-ghost" style="flex:1;" onclick="cerrarModalCrear()">Cancelar</button>
+      <button type="button" class="btn btn-stamp" style="flex:1;" onclick="irPasoCandidatos()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- Paso 2: candidatos -->
+  <div id="paso-encuesta-2" style="display:none;">
+    <span class="muted" style="font-size:12.5px;">Paso 2 de 2 · Candidatos</span>
+    <p class="muted mt-8" style="font-size:12.5px; margin-bottom:12px;">
+      Nombre y documento son obligatorios (deben coincidir con el usuario registrado). Foto y propuestas son opcionales.
+    </p>
+
+    <div id="candidatos-container" class="candidatos-scroll"></div>
+
+    <button type="button" class="btn-add-candidato" onclick="agregarCandidato()">+ Agregar candidato</button>
+
+    <textarea name="opciones" id="opciones-hidden" style="display:none;"></textarea>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      <button type="button" class="btn btn-ghost" style="flex:1;" onclick="volverPasoDatos()">← Atrás</button>
+      <button type="submit" class="btn btn-solid" style="flex:1;">Crear encuesta</button>
+    </div>
+  </div>
+</form>
     </div>
   </div>
 <script>
@@ -270,13 +286,7 @@ if (document.getElementById('modal-crear').style.display === 'flex') {
   document.body.style.overflow = 'hidden';
 }
 </script>
-  <script>
-function confirmarCierre(id, titulo) {
-  document.getElementById('cerrar-id').value = id;
-  document.getElementById('modal-cerrar-titulo').textContent = titulo;
-  document.getElementById('modal-cerrar').style.display = 'flex';
-}
-  <script>
+    <script>
 function confirmarCierre(id, titulo) {
   document.getElementById('cerrar-id').value = id;
   document.getElementById('modal-cerrar-titulo').textContent = titulo;
@@ -298,24 +308,24 @@ function agregarCandidato(datos) {
   row.className = 'candidate-input-row';
   row.id = 'candidato-row-' + id;
   row.innerHTML = `
-    <div>
-      <span class="mini-label">Nombre completo</span>
-      <input type="text" class="c-nombre" placeholder="Nombre candidato" value="${datos.nombre || ''}">
-    </div>
-    <div>
-      <span class="mini-label">Documento</span>
-      <input type="text" class="c-documento" placeholder="Documento candidato" value="${datos.documento || ''}">
-    </div>
-    <div>
-      <span class="mini-label">URL de la foto</span>
-      <input type="text" class="c-foto" placeholder="URL Foto" value="${datos.foto || ''}">
-    </div>
-    <div class="c-prop-wrap">
-      <span class="mini-label">Propuestas</span>
-      <textarea class="c-propuestas" rows="2" placeholder="Espacio para colocar las propuestas (separadas por coma)">${datos.propuestas || ''}</textarea>
-    </div>
-    <button type="button" class="btn-remove-candidato" onclick="quitarCandidato(${id})" title="Quitar candidato">✕</button>
-  `;
+  <div>
+    <span class="mini-label">Nombre completo</span>
+    <input type="text" class="c-nombre" placeholder="Nombre que coincida en la BD" value="${datos.nombre || ''}">
+  </div>
+  <div>
+    <span class="mini-label">Documento</span>
+    <input type="text" class="c-documento" placeholder="Documento que coincida con el nombre" value="${datos.documento || ''}">
+  </div>
+  <div>
+    <span class="mini-label">URL de la foto</span>
+    <input type="text" class="c-foto" placeholder="URL (no obligatoria)" value="${datos.foto || ''}">
+  </div>
+  <div class="c-prop-wrap">
+    <span class="mini-label">Propuestas</span>
+    <textarea class="c-propuestas" rows="2" placeholder="Espacio para colocar las propuestas (separadas por coma)">${datos.propuestas || ''}</textarea>
+  </div>
+  <button type="button" class="btn-remove-candidato" onclick="quitarCandidato(${id})" title="Quitar candidato">✕</button>
+`;
   document.getElementById('candidatos-container').appendChild(row);
 }
 
@@ -328,10 +338,27 @@ function quitarCandidato(id) {
   document.getElementById('candidato-row-' + id).remove();
 }
 
+function irPasoCandidatos() {
+  const titulo = document.getElementById('input-titulo').value.trim();
+  if (titulo === '') {
+    alert('Escribe el título de la encuesta antes de continuar.');
+    return;
+  }
+  document.getElementById('paso-encuesta-1').style.display = 'none';
+  document.getElementById('paso-encuesta-2').style.display = 'block';
+  document.getElementById('step-bar-2').classList.add('done');
+}
+
+function volverPasoDatos() {
+  document.getElementById('paso-encuesta-2').style.display = 'none';
+  document.getElementById('paso-encuesta-1').style.display = 'block';
+  document.getElementById('step-bar-2').classList.remove('done');
+}
+
 agregarCandidato();
 agregarCandidato();
 
-document.querySelector('#modal-crear form').addEventListener('submit', function (e) {
+document.getElementById('form-crear-encuesta').addEventListener('submit', function (e) {
   const filas = document.querySelectorAll('.candidate-input-row');
   const lineas = [];
 
@@ -372,3 +399,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 <?php endif; ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>
+
